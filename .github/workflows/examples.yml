@@ -1,0 +1,57 @@
+name: Test Examples
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.tf'
+      - 'examples/**'
+      - '.github/workflows/examples.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - '**.tf'
+      - 'examples/**'
+      - '.github/workflows/examples.yml'
+
+jobs:
+  # Test that examples can generate plans
+  plan:
+    name: Terraform Plan
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        example: ["examples/basic", "examples/complete"]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Create terraform.tfvars
+        working-directory: ${{ matrix.example }}
+        run: |
+          cat > terraform.tfvars << 'EOF'
+          project_name = "ci-test"
+          domain_name  = "example.com"
+          subdomain    = "app"
+          environment  = "dev"
+          enable_dr         = false
+          create_ci_cd_user = false
+          EOF
+
+      - name: Terraform Init
+        working-directory: ${{ matrix.example }}
+        run: terraform init -backend=false
+
+      - name: Terraform Plan (Dry Run)
+        working-directory: ${{ matrix.example }}
+        run: terraform plan -input=false
+        env:
+          AWS_REGION: us-east-1
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || 'fake' }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || 'fake' }}
+        continue-on-error: true

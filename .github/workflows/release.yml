@@ -1,0 +1,109 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  # Create release when tag is pushed
+  create-release:
+    name: Create Release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Get version from tag
+        id: get_version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          # Get changes since last tag
+          LAST_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
+          if [ -n "$LAST_TAG" ]; then
+            echo "changes<<EOF" >> $GITHUB_OUTPUT
+            git log --pretty=format:"- %s" $LAST_TAG..HEAD >> $GITHUB_OUTPUT
+            echo "" >> $GITHUB_OUTPUT
+            echo "EOF" >> $GITHUB_OUTPUT
+          else
+            echo "changes=Initial release" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Create Release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ github.ref }}
+          release_name: Release ${{ steps.get_version.outputs.VERSION }}
+          body: |
+            ## Changes
+            
+            ${{ steps.changelog.outputs.changes }}
+            
+            ## Usage
+            
+            ```hcl
+            module "ssr" {
+              source = "github.com/apitanga/serverless-ssr-module?ref=${{ steps.get_version.outputs.VERSION }}"
+              
+              project_name = "my-app"
+              domain_name  = "example.com"
+              subdomain    = "app"
+            }
+            ```
+            
+            ## Full Documentation
+            
+            See [README.md](https://github.com/apitanga/serverless-ssr-module/blob/${{ steps.get_version.outputs.VERSION }}/README.md) for complete documentation.
+          draft: false
+          prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
+
+  # Validate the release works
+  validate-release:
+    name: Validate Release
+    runs-on: ubuntu-latest
+    needs: create-release
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref }}
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.7.0"
+
+      - name: Validate Module
+        run: |
+          terraform init -backend=false
+          terraform validate
+
+      - name: Validate Examples
+        run: |
+          for example in examples/*/; do
+            echo "Validating $example..."
+            cd "$example"
+            
+            # Create test vars
+            cat > terraform.tfvars << 'EOF'
+          project_name = "release-test"
+          domain_name  = "example.com"
+          subdomain    = "app"
+          enable_dr         = false
+          create_ci_cd_user = false
+          EOF
+            
+            terraform init -backend=false
+            terraform validate
+            cd -
+          done
+
+      - name: Success Notification
+        run: echo "✅ Release ${{ github.ref }} validated successfully!"
