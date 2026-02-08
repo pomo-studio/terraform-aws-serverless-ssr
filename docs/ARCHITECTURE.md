@@ -15,14 +15,15 @@ graph TB
     OAI[CloudFront OAI]
 
     %% Origin Groups
-    OG[Origin Group<br/>Failover: 500, 502, 503, 504]
+    OG_Lambda[Lambda Origin Group<br/>Failover: 500, 502, 503, 504]
+    OG_S3[S3 Origin Group<br/>Failover: 500, 502, 503, 504]
 
     %% Primary Region
     subgraph Primary["🌎 Primary Region (us-east-1)"]
         LFURL1[Lambda Function URL]
         LF1[Lambda Function<br/>app-primary<br/>Node.js 20.x<br/>512MB / 10s]
         S3D1[S3: Deployment Bucket<br/>function.zip]
-        S3S1[S3: Static Assets<br/>/_nuxt/* files]
+        S3S1[S3: Static Assets Primary<br/>/_nuxt/* files]
         DDB1[DynamoDB Table<br/>visits<br/>Streams enabled]
     end
 
@@ -41,15 +42,16 @@ graph TB
     %% Request Flow
     User -->|1. DNS lookup| R53
     R53 -->|2. Returns CloudFront| CF
-    CF -->|3. Dynamic requests| OG
-    CF -->|3. Static: /_nuxt/*| OAI
+    CF -->|3a. Dynamic requests| OG_Lambda
+    CF -->|3b. Static: /_nuxt/*| OG_S3
 
-    %% Origin Failover
-    OG -->|Primary| LFURL1
-    OG -.->|Failover on errors| LFURL2
+    %% Lambda Origin Failover
+    OG_Lambda -->|Primary| LFURL1
+    OG_Lambda -.->|Failover on 5xx| LFURL2
 
-    %% Static Assets
-    OAI -->|Read-only access| S3S1
+    %% S3 Origin Failover
+    OG_S3 -->|Primary via OAI| S3S1
+    OG_S3 -.->|Failover on 5xx| S3S2
 
     %% Primary Lambda
     LFURL1 --> LF1
@@ -75,7 +77,7 @@ graph TB
 
     class LFURL1,LF1,S3D1,S3S1,DDB1 primary
     class LFURL2,LF2,S3D2,S3S2,DDB2 dr
-    class User,R53,CF,OAI,OG global
+    class User,R53,CF,OAI,OG_Lambda,OG_S3 global
     class LR iam
 ```
 
