@@ -1,0 +1,18 @@
+# Example Terraform variables for complete example
+# Copy this file to terraform.tfvars and customize for your needs
+
+project_name     = "my-app-prod"
+domain_name      = "example.com"
+subdomain        = "app"
+environment      = "prod"
+route53_managed  = false  # Set to true if domain is in Route53
+
+# Optional: Enable DR for multi-region deployment
+# enable_dr = true
+
+# Optional: Create CI/CD IAM user for automated deployments
+# create_ci_cd_user = true
+
+# Optional: Customize Lambda settings
+# lambda_memory_size = 1024
+# lambda_timeout     = 30

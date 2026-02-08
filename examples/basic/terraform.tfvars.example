@@ -1,0 +1,8 @@
+# Example Terraform variables for basic example
+# Copy this file to terraform.tfvars and customize for your needs
+
+project_name = "my-app-dev"
+environment  = "dev"
+
+# Note: This basic example uses CloudFront URL (no custom domain)
+# and single region (no DR) for minimal setup
