@@ -16,13 +16,15 @@ Full production setup with custom domain, multi-region DR, and CI/CD.
 
 ## Prerequisites
 
-**Your domain must be in Route53** in the same AWS account.
+**For Route53 Domain:** Your domain must be in Route53 in the same AWS account.
 
 See [Domain Setup Guide](../../docs/DOMAIN_SETUP.md) for migration instructions.
 
 ## Usage
 
-### With Route53 Domain
+### Option 1: With Route53 Domain (Recommended)
+
+If you have a domain in Route53, enable automatic DNS management:
 
 ```bash
 terraform init
@@ -33,18 +35,28 @@ terraform apply \
   -var="route53_managed=true"
 ```
 
-### With External Domain (not in Route53)
+### Option 2: With External Domain (not in Route53)
+
+If your domain is with another provider (default for testing):
 
 ```bash
 terraform init
 terraform apply \
   -var="project_name=my-app" \
   -var="domain_name=example.com" \
-  -var="subdomain=app" \
-  -var="route53_managed=false"
+  -var="subdomain=app"
 ```
 
 Terraform will output DNS records to add to your domain registrar.
+
+### Option 3: No Custom Domain (CloudFront URL only)
+
+```bash
+terraform init
+terraform apply \
+  -var="project_name=my-app" \
+  -var="domain_name=null"
+```
 
 ## Output
 

@@ -19,7 +19,7 @@ variable "subdomain" {
 variable "route53_managed" {
   description = "Whether domain is hosted in Route53 (enables automatic DNS management)"
   type        = bool
-  default     = true
+  default     = false  # Set to true when you have the domain in Route53
 }
 
 variable "environment" {
