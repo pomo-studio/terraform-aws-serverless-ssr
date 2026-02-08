@@ -1,4 +1,6 @@
 # Basic Example - Serverless SSR Module
+# Minimal setup: No custom domain, no DR, no CI/CD
+# Perfect for development and testing
 
 terraform {
   required_version = ">= 1.5.0"
@@ -29,9 +31,10 @@ module "ssr" {
   }
 
   project_name = var.project_name
-  domain_name  = var.domain_name
-  subdomain    = var.subdomain
   environment  = var.environment
+
+  # No domain configuration - uses CloudFront URL
+  # domain_name and subdomain are omitted (defaults to null)
 
   # Disable DR and CI/CD for minimal setup
   enable_dr         = false

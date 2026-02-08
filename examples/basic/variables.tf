@@ -1,16 +1,7 @@
 variable "project_name" {
   description = "Project name"
   type        = string
-}
-
-variable "domain_name" {
-  description = "Base domain name"
-  type        = string
-}
-
-variable "subdomain" {
-  description = "Subdomain for the application"
-  type        = string
+  default     = "my-app-dev"
 }
 
 variable "environment" {

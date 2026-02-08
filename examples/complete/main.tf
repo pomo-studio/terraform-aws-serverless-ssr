@@ -1,4 +1,5 @@
 # Complete Example - Serverless SSR Module
+# Full production setup with custom domain, DR, and CI/CD
 
 terraform {
   required_version = ">= 1.5.0"
@@ -29,15 +30,24 @@ module "ssr" {
   }
 
   project_name = var.project_name
-  domain_name  = var.domain_name
-  subdomain    = var.subdomain
   environment  = var.environment
+
+  # Custom domain configuration (Route53 managed)
+  domain_name     = var.domain_name
+  subdomain       = var.subdomain
+  route53_managed = var.route53_managed
 
   # Enable all features
   enable_dr         = true
   create_ci_cd_user = true
-  custom_domain     = var.custom_domain
 
+  # Custom Lambda configuration
   lambda_memory_size = 1024
   lambda_timeout     = 30
+
+  # Additional tags
+  tags = {
+    ManagedBy = "Terraform"
+    Example   = "Complete"
+  }
 }
