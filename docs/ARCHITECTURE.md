@@ -1,324 +1,180 @@
-# Architecture Overview
+# Architecture
 
-This module deploys a multi-region serverless SSR platform on AWS with automatic failover.
+Multi-region serverless SSR platform on AWS with automatic failover.
 
-## Detailed Architecture Diagram
+**[📊 View Detailed Diagram](diagram.md)**
 
-```mermaid
-graph TB
-    %% Users and DNS
-    User[👤 User Request]
-    R53[Route 53<br/>subdomain.domain.com<br/>Simple A Record Alias]
-
-    %% CloudFront
-    CF[☁️ CloudFront Distribution<br/>Global CDN<br/>ACM SSL Certificate]
-    OAI[CloudFront OAI]
-
-    %% Origin Groups
-    OG_Lambda[Lambda Origin Group<br/>Failover: 500, 502, 503, 504]
-    OG_S3[S3 Origin Group<br/>Failover: 500, 502, 503, 504]
-
-    %% Primary Region
-    subgraph Primary["🌎 Primary Region (us-east-1)"]
-        LFURL1[Lambda Function URL]
-        LF1[Lambda Function<br/>app-primary<br/>Node.js 20.x<br/>512MB / 10s]
-        S3D1[S3: Deployment Bucket<br/>function.zip]
-        S3S1[S3: Static Assets Primary<br/>/_nuxt/* files]
-        DDB1[DynamoDB Table<br/>visits<br/>Streams enabled]
-    end
-
-    %% DR Region
-    subgraph DR["🌍 DR Region (us-west-2)"]
-        LFURL2[Lambda Function URL]
-        LF2[Lambda Function<br/>app-dr<br/>Node.js 20.x<br/>512MB / 10s]
-        S3D2[S3: Deployment Bucket<br/>function.zip]
-        S3S2[S3: Static Assets DR<br/>Replicated]
-        DDB2[DynamoDB Replica<br/>Global Table]
-    end
-
-    %% IAM
-    LR[IAM Role<br/>Lambda Execution Role<br/>+ DynamoDB Policy<br/>+ S3 Policy<br/>+ CloudWatch Logs]
-
-    %% Request Flow
-    User -->|1. DNS lookup| R53
-    R53 -->|2. Returns CloudFront| CF
-    CF -->|3a. Dynamic requests| OG_Lambda
-    CF -->|3b. Static: /_nuxt/*| OG_S3
-
-    %% Lambda Origin Failover
-    OG_Lambda -->|Primary| LFURL1
-    OG_Lambda -.->|Failover on 5xx| LFURL2
-
-    %% S3 Origin Failover
-    OG_S3 -->|Primary via OAI| S3S1
-    OG_S3 -.->|Failover on 5xx| S3S2
-
-    %% Primary Lambda
-    LFURL1 --> LF1
-    LF1 -->|Loads code from| S3D1
-    LF1 -->|Read/Write data| DDB1
-    LF1 -.->|Assumes role| LR
-
-    %% DR Lambda
-    LFURL2 --> LF2
-    LF2 -->|Loads code from| S3D2
-    LF2 -->|Read/Write data| DDB2
-    LF2 -.->|Assumes role| LR
-
-    %% Replication
-    S3S1 -.->|Cross-region<br/>replication| S3S2
-    DDB1 <-.->|DynamoDB Streams<br/>bidirectional sync| DDB2
-
-    %% Styling
-    classDef primary fill:#e1f5ff,stroke:#0288d1,stroke-width:2px
-    classDef dr fill:#fff3e0,stroke:#f57c00,stroke-width:2px
-    classDef global fill:#e8f5e9,stroke:#388e3c,stroke-width:2px
-    classDef iam fill:#f3e5f5,stroke:#7b1fa2,stroke-width:2px
-
-    class LFURL1,LF1,S3D1,S3S1,DDB1 primary
-    class LFURL2,LF2,S3D2,S3S2,DDB2 dr
-    class User,R53,CF,OAI,OG_Lambda,OG_S3 global
-    class LR iam
-```
-
-## High-Level Architecture
+## Overview
 
 ```
-                         CloudFront
-                    (Global CDN + Failover)
-                            │
-           ┌────────────────┴────────────────┐
-           │                                 │
-    ┌──────▼──────┐               ┌────────▼──────┐
-    │   Primary   │◄─────────────►│      DR       │
-    │  us-east-1  │   Failover    │   us-west-2   │
-    │             │               │               │
-    │  • Lambda   │               │  • Lambda     │
-    │  • S3       │               │  • S3         │
-    │  • DynamoDB │               │               │
-    └─────────────┘               └───────────────┘
+User → CloudFront (Global CDN)
+         ├─ Dynamic: Lambda us-east-1 → (failover) → Lambda us-west-2
+         └─ Static:  S3 us-east-1    → (failover) → S3 us-west-2
 ```
 
-## Components
+CloudFront handles all failover automatically using origin groups. When a primary origin returns 5xx errors, CloudFront routes to DR.
 
-### CloudFront Distribution
+## Core Components
 
-- **Purpose**: Global CDN with automatic failover
-- **Features**:
-  - Origin groups with failover (primary → DR)
-  - Custom domain with ACM SSL certificate
-  - Cache policies for static assets
-  - Origin request policies for SSR content
+### CloudFront Distribution (Global)
+- Global CDN with ~450 edge locations
+- Origin groups for automatic failover (Lambda + S3)
+- Optional custom domain with ACM SSL certificate
+- Handles HTTPS termination and caching
 
-### Lambda Functions
+### Lambda Functions (Regional)
+- **Runtime**: Node.js 20.x
+- **Regions**: Primary (us-east-1) + DR (us-west-2)
+- **Default**: 512MB memory, 10s timeout
+- **Access**: Lambda Function URLs (public HTTPS endpoints)
+- **Bootstrap**: Includes placeholder code, works immediately
 
-- **Runtime**: Node.js 22.x
-- **Regions**: Primary and DR (identical deployments)
-- **Features**:
-  - Function URLs for direct HTTP access
-  - Environment variables from infrastructure config
-  - Configurable memory (default 512MB) and timeout (default 10s)
-  - Bootstrap code included (works without app deployment)
+### S3 Buckets (Regional)
+- **Static Assets**: Public files (JS, CSS, images) with cross-region replication
+- **Deployments**: Lambda code packages (primary + DR)
+- **Access**: CloudFront via Origin Access Identity (OAI)
 
-### S3 Buckets
+### DynamoDB (Global Table)
+- On-demand pricing (pay per request)
+- Automatic bi-directional replication between regions
+- Example schema included (visits counter)
 
-**Static Assets Bucket (Primary)**
-- Public assets (JS, CSS, images)
-- Cross-region replication to DR
-- CloudFront OAI for secure access
-- Immutable cache headers (1 year)
+### Route 53 (Optional)
+- Only created if `domain_name` is set and `route53_managed = true`
+- Simple A record (alias) pointing to CloudFront
+- Automatic ACM certificate DNS validation
 
-**Deployment Buckets (Primary + DR)**
-- Lambda deployment packages
-- Used by Lambda to pull code updates
-- Private buckets
-
-### DynamoDB
-
-- **Type**: Global table (multi-region replication)
-- **Purpose**: State persistence across regions
-- **Schema**: Generic (visits counter example)
-- **On-Demand**: Pay per request pricing
-
-### Route 53
-
-- **Purpose**: DNS and SSL validation
-- **Records**:
-  - A record (alias to CloudFront)
-  - AAAA record (IPv6 alias to CloudFront)
-  - TXT records for ACM validation
-
-### ACM Certificates
-
-- **Primary**: us-east-1 (required for CloudFront)
-- **DR**: Secondary region
-- **Validation**: DNS via Route 53
-- **Auto-renewal**: Managed by AWS
-
-### IAM (Optional)
-
-**CI/CD User** (if `create_ci_cd_user = true`)
-- Permissions to update Lambda functions
-- S3 write access for static assets
-- CloudFront invalidation permissions
-- Used by GitHub Actions or other CI/CD
+### IAM Roles
+- **Lambda Execution Role**: DynamoDB, S3, CloudWatch Logs access
+- **S3 Replication Role**: Cross-region replication
+- **CI/CD User** (optional): Deploy permissions for automation
 
 ## Traffic Flow
 
-### Static Assets (JS, CSS, Images)
-
+### SSR Requests (Dynamic)
 ```
-User → CloudFront → S3 (Primary) → [If unavailable] → S3 (DR)
+User → CloudFront → Lambda (primary or DR) → DynamoDB
 ```
+- Not cached (TTL=0)
+- Rendered on-demand
+- Automatic failover on 5xx errors
 
-- Cached at CloudFront edge locations
-- Immutable (1-year cache)
-- Fast delivery worldwide
-
-### SSR Requests (HTML Pages)
-
+### Static Assets (/_nuxt/*, /favicon.ico)
 ```
-User → CloudFront → Lambda (Primary) → [If unavailable] → Lambda (DR)
+User → CloudFront → S3 (primary or DR)
 ```
+- Long cache (1 day to 1 year)
+- Immutable assets
+- Automatic failover on 5xx errors
 
-- Not cached (dynamic content)
-- Rendered on-demand by Lambda
-- Automatic failover if primary fails
+## Failover
 
-### API Requests
+CloudFront origin groups detect 5xx errors and automatically route to DR:
+- **Detection**: Immediate (on 500, 502, 503, 504)
+- **Failover**: Automatic
+- **Recovery**: Automatic when primary is healthy
 
+No health checks needed - CloudFront handles everything.
+
+## Domain Options
+
+### 1. No Domain (CloudFront URL)
+```hcl
+project_name = "my-app"
+# domain_name = null (default)
 ```
-User → CloudFront → Lambda (Primary) → DynamoDB (Global Table)
+**URL**: `https://d111111abcdef8.cloudfront.net`
+
+### 2. Route53 Domain (Automated)
+```hcl
+project_name      = "my-app"
+domain_name       = "example.com"
+subdomain         = "app"
+route53_managed   = true
 ```
+**URL**: `https://app.example.com` (automatic DNS + SSL)
 
-- Same path as SSR requests
-- DynamoDB replicates data globally
-- Low-latency reads/writes
-
-## Failover Behavior
-
-CloudFront origin groups provide automatic failover:
-
-1. **Healthy State**: All requests go to primary region
-2. **Primary Failure**: CloudFront detects 500/502/503/504 errors
-3. **Automatic Failover**: Subsequent requests route to DR region
-4. **Recovery**: When primary is healthy, traffic returns automatically
-
-**Failover Time**: ~30 seconds (CloudFront health check interval)
-
-## Multi-Region Strategy
-
-### Why Two Regions?
-
-- **High Availability**: Service continues if one region fails
-- **Disaster Recovery**: Data replicated automatically
-- **Global Performance**: Users served from nearest region
-
-### Cost Optimization
-
-If you don't need DR, set `enable_dr = false`:
-- Deploys only to primary region
-- Removes S3 replication
-- Skips DR Lambda function
-- Single DynamoDB table (no global replication)
-
-## Bootstrap Code
-
-The module includes inline bootstrap Lambda code:
-
-```javascript
-exports.handler = async (event) => {
-  return {
-    statusCode: 200,
-    headers: { 'Content-Type': 'text/html' },
-    body: '<html><body><h1>Bootstrap</h1></body></html>'
-  };
-};
+### 3. External Domain (Manual DNS)
+```hcl
+project_name      = "my-app"
+domain_name       = "example.com"
+subdomain         = "app"
+route53_managed   = false
 ```
+**URL**: `https://app.example.com` (after adding DNS records manually)
 
-**Purpose**:
-- Infrastructure can deploy without pre-built application
-- Lambda Function URL works immediately
-- Replace with real application via deployment
+## DR Options
 
-## Security
+### With DR (Default)
+```hcl
+enable_dr = true  # default
+```
+- Multi-region deployment
+- Automatic failover
+- Data replication
+- Higher availability
 
-### Network
-- S3 buckets: Not publicly accessible (CloudFront OAI only)
-- Lambda: No VPC (faster cold starts, no NAT costs)
-- DynamoDB: Encrypted at rest by default
+### Without DR
+```hcl
+enable_dr = false
+```
+- Single region (us-east-1)
+- Lower cost (~30% savings)
+- Good for dev/test
 
-### IAM
-- Lambda execution role: Minimal permissions (logs + DynamoDB)
-- CI/CD user (optional): Deployment permissions only
-- CloudFront: OAI for S3 access
+## Cost Estimate
 
-### SSL/TLS
-- ACM certificates auto-renew
-- CloudFront enforces HTTPS
-- TLS 1.2+ only
+Low-traffic production site (~10K requests/day):
 
-## Monitoring
-
-### CloudWatch Logs
-
-- Lambda: `/aws/lambda/<function-name>`
-- Automatic retention (configurable)
-
-### CloudWatch Metrics
-
-- Lambda: Invocations, errors, duration
-- CloudFront: Requests, bytes transferred, error rates
-- DynamoDB: Read/write capacity, throttles
-
-### Alarms (Not Included)
-
-Consider adding:
-- Lambda error rate > threshold
-- CloudFront 5xx error rate > threshold
-- DynamoDB throttled requests
-
-## Cost Estimation
-
-Typical monthly costs for low-traffic site:
-
-| Service | Estimated Cost |
-|---------|----------------|
-| Lambda | $1-5 (first 1M requests free) |
-| CloudFront | $5-10 (first 1TB/mo data transfer) |
+| Service | Monthly Cost |
+|---------|-------------|
+| Lambda | $1-5 |
+| CloudFront | $5-10 |
 | S3 | $1-3 |
-| DynamoDB | $1-5 (on-demand, low traffic) |
-| Route 53 | $0.50 per hosted zone |
+| DynamoDB | $1-5 |
+| Route 53 | $0.50 (if used) |
 | ACM | Free |
-| **Total** | **~$10-25/mo** |
+| **Total** | **$10-25** |
 
-High-traffic sites scale automatically (pay-per-use pricing).
+Scales automatically with traffic. DR adds ~$5-10/month for replication.
 
 ## Performance
 
-### Cold Start
-- First request after idle: ~500-1000ms
-- Keep-warm strategies can reduce this (not included)
+- **Cold start**: 500-1000ms (first request after idle)
+- **Warm Lambda**: 50-200ms response time
+- **DynamoDB**: <10ms queries
+- **Static assets**: <20ms (from edge)
+- **CloudFront cache hit**: 80%+ typical
 
-### Warm Lambda
-- Typical response time: 50-200ms
-- DynamoDB queries: <10ms
+## Security
 
-### CloudFront Cache
-- Static assets: Served from edge (< 20ms)
-- Cache hit ratio: Typically 80%+
+- **Network**: S3 private (OAI only), Lambda public (Function URLs), DynamoDB encrypted
+- **SSL/TLS**: ACM certificates (auto-renew), CloudFront enforces HTTPS, TLS 1.2+
+- **IAM**: Minimal permissions (least privilege)
+- **No VPC**: Faster cold starts, no NAT costs
 
 ## Limitations
 
-- Lambda timeout: Max 15 minutes (AWS limit)
-- Lambda memory: Max 10GB (AWS limit)
+- Lambda timeout: 10s default (max 15 minutes)
+- Lambda memory: 512MB default (max 10GB)
 - Response size: 6MB (Lambda Function URL limit)
-- Concurrent executions: Account limit (1000 default, can increase)
+- Concurrent executions: 1000 default (can increase)
 
-## Future Enhancements
+## Monitoring
 
-- [ ] WAF integration for DDoS protection
-- [ ] CloudWatch alarms and SNS notifications
-- [ ] Lambda@Edge for edge-side rendering
-- [ ] VPC support for private resource access
-- [ ] Multi-environment support (dev/staging/prod)
+CloudWatch logs and metrics are automatic:
+- Lambda: `/aws/lambda/<function-name>`
+- CloudFront: Requests, errors, bytes transferred
+- DynamoDB: Read/write capacity, throttles
+
+**Recommended alarms** (not included):
+- Lambda error rate > 1%
+- CloudFront 5xx rate > 0.5%
+- DynamoDB throttled requests
+
+## Related Docs
+
+- **[📊 Detailed Diagram](diagram.md)** - Visual architecture
+- **[🚀 Getting Started](GETTING_STARTED.md)** - Step-by-step deployment
+- **[📘 API Reference](API.md)** - All variables and outputs
+- **[🔧 Troubleshooting](TROUBLESHOOTING.md)** - Common issues
