@@ -57,7 +57,7 @@ module "ssr" {
   subdomain    = "app"
 
   enable_dr         = true
-  create_ci_cd_user = true
+  create_ci_cd_user = false  # prefer OIDC; set true only for legacy IAM key auth
 }
 
 # Output configuration for your app
@@ -136,6 +136,10 @@ aws lambda update-function-code \
 aws s3 sync .output/public/ \
   s3://$(jq -r '.s3_bucket_static' ../config/infra-outputs.json)/ \
   --delete
+
+# Note: CloudFront routes /_nuxt/* to S3. In Nuxt/Vite projects, place images and
+# other assets in assets/ (not public/) so Vite bundles them to _nuxt/[hash].ext.
+# Files placed in public/ at paths like /images/* will route to Lambda instead of S3.
 
 # Invalidate CloudFront cache
 aws cloudfront create-invalidation \

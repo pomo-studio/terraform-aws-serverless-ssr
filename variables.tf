@@ -82,9 +82,9 @@ variable "lambda_timeout" {
 }
 
 variable "create_ci_cd_user" {
-  description = "Create IAM user for CI/CD deployments"
+  description = "Create IAM user for CI/CD deployments. Prefer OIDC (set false) over static credentials."
   type        = bool
-  default     = true
+  default     = false
 }
 
 variable "tags" {

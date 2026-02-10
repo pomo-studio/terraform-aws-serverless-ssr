@@ -143,11 +143,22 @@ See the [pomo-ssr deploy workflow](https://github.com/apitanga/pomo-ssr/blob/mai
 ```hcl
 module "ssr" {
   # ...
-  create_ci_cd_user = true   # default
+  create_ci_cd_user = true
 }
 ```
 
 Outputs `cicd_aws_access_key_id` and `cicd_aws_secret_access_key`. Store as secrets, rotate regularly.
+
+---
+
+## Static assets
+
+CloudFront routes `/_nuxt/*` to S3 and everything else to Lambda. In Nuxt/Vite projects:
+
+- **Put images in `assets/`** — Vite bundles them to `_nuxt/[hash].ext`, served from S3 via the `/_nuxt/*` behavior.
+- **Avoid `/images/*` in `public/`** — those paths have no S3 behavior and will hit Lambda, returning a 404.
+
+The `/favicon.ico` path has its own S3 behavior and is the only `public/` exception.
 
 ---
 
@@ -164,7 +175,7 @@ Outputs `cicd_aws_access_key_id` and `cicd_aws_secret_access_key`. Store as secr
 | `enable_dr` | `bool` | `true` | Deploy DR Lambda and S3. Disable for dev/staging to reduce cost. |
 | `lambda_memory_size` | `number` | `512` | Lambda memory in MB. |
 | `lambda_timeout` | `number` | `10` | Lambda timeout in seconds. |
-| `create_ci_cd_user` | `bool` | `true` | Create IAM user with deployment credentials. Set false when using OIDC. |
+| `create_ci_cd_user` | `bool` | `false` | Create IAM user with deployment credentials. Set false when using OIDC. |
 | `environment` | `string` | `prod` | Environment tag applied to all resources. |
 | `tags` | `map(string)` | `{}` | Additional tags for all resources. |
 
@@ -248,7 +259,7 @@ terraform output -json > config/infra-outputs.json
 ## Related
 
 - [pomo-ssr](https://github.com/apitanga/pomo-ssr) — demo site using this module (Nuxt 3, multi-region, OIDC CI/CD)
-- [pomo-dev](https://github.com/apitanga/pomo-dev) — production site using this module
+- [pomo-dev](https://github.com/apitanga/pomo-dev) — postmodern. Terraform pattern library, production site using this module
 
 ---
 
