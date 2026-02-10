@@ -1,6 +1,26 @@
 # CI/CD IAM User and Policies
 # Dedicated user for GitHub Actions deployments with least-privilege access
 
+locals {
+  cicd_dynamodb_statement = var.enable_dynamo ? [{
+    Sid    = "DynamoDBOperations"
+    Effect = "Allow"
+    Action = [
+      "dynamodb:GetItem",
+      "dynamodb:PutItem",
+      "dynamodb:UpdateItem",
+      "dynamodb:DeleteItem",
+      "dynamodb:Query",
+      "dynamodb:Scan",
+      "dynamodb:DescribeTable"
+    ]
+    Resource = [
+      aws_dynamodb_table.visits_primary[0].arn,
+      "${aws_dynamodb_table.visits_primary[0].arn}/*"
+    ]
+  }] : []
+}
+
 # CI/CD IAM User
 resource "aws_iam_user" "cicd" {
   count    = var.create_ci_cd_user ? 1 : 0
@@ -24,93 +44,79 @@ resource "aws_iam_policy" "cicd" {
 
   policy = jsonencode({
     Version = "2012-10-17"
-    Statement = [
-      {
-        Sid    = "LambdaDeployment"
-        Effect = "Allow"
-        Action = [
-          "lambda:UpdateFunctionCode",
-          "lambda:GetFunction",
-          "lambda:GetFunctionUrlConfig",
-          "lambda:InvokeFunction",
-          "lambda:PublishVersion"
-        ]
-        Resource = [
-          "arn:aws:lambda:${var.primary_region}:${data.aws_caller_identity.current.account_id}:function:${local.app_name}-*",
-          "arn:aws:lambda:${var.dr_region}:${data.aws_caller_identity.current.account_id}:function:${local.app_name}-*"
-        ]
-      },
-      {
-        Sid    = "S3DeploymentArtifacts"
-        Effect = "Allow"
-        Action = [
-          "s3:PutObject",
-          "s3:GetObject",
-          "s3:DeleteObject",
-          "s3:ListBucket"
-        ]
-        Resource = concat([
-          aws_s3_bucket.lambda_deployments_primary.arn,
-          "${aws_s3_bucket.lambda_deployments_primary.arn}/*",
-          aws_s3_bucket.static_assets.arn,
-          "${aws_s3_bucket.static_assets.arn}/*"
-          ], var.enable_dr ? [
-          aws_s3_bucket.lambda_deployments_dr[0].arn,
-          "${aws_s3_bucket.lambda_deployments_dr[0].arn}/*",
-          aws_s3_bucket.static_assets_dr[0].arn,
-          "${aws_s3_bucket.static_assets_dr[0].arn}/*"
-        ] : [])
-      },
-      {
-        Sid    = "DynamoDBOperations"
-        Effect = "Allow"
-        Action = [
-          "dynamodb:GetItem",
-          "dynamodb:PutItem",
-          "dynamodb:UpdateItem",
-          "dynamodb:DeleteItem",
-          "dynamodb:Query",
-          "dynamodb:Scan",
-          "dynamodb:DescribeTable"
-        ]
-        Resource = [
-          aws_dynamodb_table.visits_primary.arn,
-          "${aws_dynamodb_table.visits_primary.arn}/*"
-        ]
-      },
-      {
-        Sid    = "CloudFrontRead"
-        Effect = "Allow"
-        Action = [
-          "cloudfront:ListDistributions"
-        ]
-        Resource = "*"
-      },
-      {
-        Sid    = "CloudFrontInvalidation"
-        Effect = "Allow"
-        Action = [
-          "cloudfront:CreateInvalidation",
-          "cloudfront:GetInvalidation",
-          "cloudfront:ListInvalidations"
-        ]
-        Resource = "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/${aws_cloudfront_distribution.main.id}"
-      },
-      {
-        Sid    = "ReadOnlyForVerification"
-        Effect = "Allow"
-        Action = [
-          "logs:DescribeLogGroups",
-          "logs:FilterLogEvents"
-        ]
-        Resource = "*"
-        Condition = {
-          StringEquals = {
-            "aws:RequestedRegion" = [var.primary_region, var.dr_region]
+    Statement = concat(
+      [
+        {
+          Sid    = "LambdaDeployment"
+          Effect = "Allow"
+          Action = [
+            "lambda:UpdateFunctionCode",
+            "lambda:GetFunction",
+            "lambda:GetFunctionUrlConfig",
+            "lambda:InvokeFunction",
+            "lambda:PublishVersion"
+          ]
+          Resource = [
+            "arn:aws:lambda:${var.primary_region}:${data.aws_caller_identity.current.account_id}:function:${local.app_name}-*",
+            "arn:aws:lambda:${var.dr_region}:${data.aws_caller_identity.current.account_id}:function:${local.app_name}-*"
+          ]
+        },
+        {
+          Sid    = "S3DeploymentArtifacts"
+          Effect = "Allow"
+          Action = [
+            "s3:PutObject",
+            "s3:GetObject",
+            "s3:DeleteObject",
+            "s3:ListBucket"
+          ]
+          Resource = concat([
+            aws_s3_bucket.lambda_deployments_primary.arn,
+            "${aws_s3_bucket.lambda_deployments_primary.arn}/*",
+            aws_s3_bucket.static_assets.arn,
+            "${aws_s3_bucket.static_assets.arn}/*"
+            ], var.enable_dr ? [
+            aws_s3_bucket.lambda_deployments_dr[0].arn,
+            "${aws_s3_bucket.lambda_deployments_dr[0].arn}/*",
+            aws_s3_bucket.static_assets_dr[0].arn,
+            "${aws_s3_bucket.static_assets_dr[0].arn}/*"
+          ] : [])
+        },
+        {
+          Sid    = "CloudFrontRead"
+          Effect = "Allow"
+          Action = [
+            "cloudfront:ListDistributions"
+          ]
+          Resource = "*"
+        },
+        {
+          Sid    = "CloudFrontInvalidation"
+          Effect = "Allow"
+          Action = [
+            "cloudfront:CreateInvalidation",
+            "cloudfront:GetInvalidation",
+            "cloudfront:ListInvalidations"
+          ]
+          Resource = "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/${aws_cloudfront_distribution.main.id}"
+        },
+        {
+          Sid    = "ReadOnlyForVerification"
+          Effect = "Allow"
+          Action = [
+            "logs:DescribeLogGroups",
+            "logs:FilterLogEvents"
+          ]
+          Resource = "*"
+          Condition = {
+            StringEquals = {
+              "aws:RequestedRegion" = [var.primary_region, var.dr_region]
+            }
           }
         }
-      }
-    ]
+      ],
+      local.cicd_dynamodb_statement
+    )
   })
 }
 

@@ -69,6 +69,12 @@ variable "enable_dr" {
   default     = true
 }
 
+variable "enable_dynamo" {
+  description = "Deploy DynamoDB global table. Set false if your app has no persistence needs or uses an external database."
+  type        = bool
+  default     = true
+}
+
 variable "lambda_memory_size" {
   description = "Lambda memory size in MB"
   type        = number

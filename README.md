@@ -173,6 +173,7 @@ The `/favicon.ico` path has its own S3 behavior and is the only `public/` except
 | `primary_region` | `string` | `us-east-1` | Primary AWS region. |
 | `dr_region` | `string` | `us-west-2` | DR AWS region. |
 | `enable_dr` | `bool` | `true` | Deploy DR Lambda and S3. Disable for dev/staging to reduce cost. |
+| `enable_dynamo` | `bool` | `true` | Deploy DynamoDB global table. Set false if your app has no persistence needs or uses an external database. |
 | `lambda_memory_size` | `number` | `512` | Lambda memory in MB. |
 | `lambda_timeout` | `number` | `10` | Lambda timeout in seconds. |
 | `create_ci_cd_user` | `bool` | `false` | Create IAM user with deployment credentials. Set false when using OIDC. |

@@ -162,14 +162,16 @@ resource "aws_lambda_function" "dr" {
 # ------------------------------------------------------------------------------
 
 locals {
-  lambda_environment = {
-    NODE_ENV       = "production"
-    NITRO_PRESET   = "aws-lambda"
-    DYNAMODB_TABLE = aws_dynamodb_table.visits_primary.name
-    PRIMARY_REGION = var.primary_region
-    DR_REGION      = var.dr_region
-    PROJECT_NAME   = var.project_name
-  }
+  lambda_environment = merge(
+    {
+      NODE_ENV       = "production"
+      NITRO_PRESET   = "aws-lambda"
+      PRIMARY_REGION = var.primary_region
+      DR_REGION      = var.dr_region
+      PROJECT_NAME   = var.project_name
+    },
+    var.enable_dynamo ? { DYNAMODB_TABLE = aws_dynamodb_table.visits_primary[0].name } : {}
+  )
 }
 
 # IAM Role for Lambda Execution
@@ -197,6 +199,7 @@ resource "aws_iam_role" "lambda_execution" {
 # ------------------------------------------------------------------------------
 
 resource "aws_iam_policy" "lambda_dynamodb" {
+  count    = var.enable_dynamo ? 1 : 0
   provider = aws.primary
   name     = "${local.app_name}-dynamodb-policy"
 
@@ -214,8 +217,8 @@ resource "aws_iam_policy" "lambda_dynamodb" {
           "dynamodb:Scan"
         ]
         Resource = [
-          aws_dynamodb_table.visits_primary.arn,
-          "${aws_dynamodb_table.visits_primary.arn}/*"
+          aws_dynamodb_table.visits_primary[0].arn,
+          "${aws_dynamodb_table.visits_primary[0].arn}/*"
         ]
       }
     ]
@@ -260,9 +263,10 @@ resource "aws_iam_role_policy_attachment" "lambda_basic_execution" {
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_dynamodb" {
+  count      = var.enable_dynamo ? 1 : 0
   provider   = aws.primary
   role       = aws_iam_role.lambda_execution.name
-  policy_arn = aws_iam_policy.lambda_dynamodb.arn
+  policy_arn = aws_iam_policy.lambda_dynamodb[0].arn
 }
 
 resource "aws_iam_role_policy_attachment" "lambda_s3" {
