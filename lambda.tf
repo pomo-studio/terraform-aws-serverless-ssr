@@ -300,6 +300,7 @@ resource "aws_lambda_function_url" "dr" {
 # Allow CloudFront to invoke Function URLs via OAC (SigV4-signed requests).
 # Two permissions are required: lambda:InvokeFunctionUrl and lambda:InvokeFunction.
 # Note: v2.2.0 included only InvokeFunctionUrl; v2.2.2+ adds missing InvokeFunction.
+# v2.2.3 adds project_name prefix to statement IDs for uniqueness across projects.
 # Source account condition avoids circular dependency with the distribution ARN
 # while still ensuring only CloudFront distributions in this account can invoke.
 # Additional source_arn permissions provide tighter security when distribution ARN is known.
@@ -307,7 +308,7 @@ resource "aws_lambda_function_url" "dr" {
 resource "aws_lambda_permission" "allow_cloudfront_primary" {
   provider = aws.primary
 
-  statement_id   = "AllowCloudFrontOAC"
+  statement_id   = "${var.project_name}-AllowCloudFrontOAC"
   action         = "lambda:InvokeFunctionUrl"
   function_name  = aws_lambda_function.primary.function_name
   principal      = "cloudfront.amazonaws.com"
@@ -318,7 +319,7 @@ resource "aws_lambda_permission" "allow_cloudfront_dr" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  statement_id   = "AllowCloudFrontOAC"
+  statement_id   = "${var.project_name}-AllowCloudFrontOAC"
   action         = "lambda:InvokeFunctionUrl"
   function_name  = aws_lambda_function.dr[0].function_name
   principal      = "cloudfront.amazonaws.com"
@@ -329,7 +330,7 @@ resource "aws_lambda_permission" "allow_cloudfront_dr" {
 resource "aws_lambda_permission" "allow_cloudfront_primary_dist" {
   provider = aws.primary
 
-  statement_id   = "AllowCloudFrontOACDist"
+  statement_id   = "${var.project_name}-AllowCloudFrontOACDist"
   action         = "lambda:InvokeFunctionUrl"
   function_name  = aws_lambda_function.primary.function_name
   principal      = "cloudfront.amazonaws.com"
@@ -340,7 +341,7 @@ resource "aws_lambda_permission" "allow_cloudfront_dr_dist" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  statement_id   = "AllowCloudFrontOACDist"
+  statement_id   = "${var.project_name}-AllowCloudFrontOACDist"
   action         = "lambda:InvokeFunctionUrl"
   function_name  = aws_lambda_function.dr[0].function_name
   principal      = "cloudfront.amazonaws.com"
@@ -351,7 +352,7 @@ resource "aws_lambda_permission" "allow_cloudfront_dr_dist" {
 resource "aws_lambda_permission" "allow_cloudfront_primary_invoke" {
   provider = aws.primary
 
-  statement_id   = "AllowCloudFrontOACInvoke"
+  statement_id   = "${var.project_name}-AllowCloudFrontOACInvoke"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.primary.function_name
   principal      = "cloudfront.amazonaws.com"
@@ -361,7 +362,7 @@ resource "aws_lambda_permission" "allow_cloudfront_primary_invoke" {
 resource "aws_lambda_permission" "allow_cloudfront_primary_invoke_dist" {
   provider = aws.primary
 
-  statement_id   = "AllowCloudFrontOACInvokeDist"
+  statement_id   = "${var.project_name}-AllowCloudFrontOACInvokeDist"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.primary.function_name
   principal      = "cloudfront.amazonaws.com"
@@ -372,7 +373,7 @@ resource "aws_lambda_permission" "allow_cloudfront_dr_invoke" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  statement_id   = "AllowCloudFrontOACInvoke"
+  statement_id   = "${var.project_name}-AllowCloudFrontOACInvoke"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.dr[0].function_name
   principal      = "cloudfront.amazonaws.com"
@@ -383,7 +384,7 @@ resource "aws_lambda_permission" "allow_cloudfront_dr_invoke_dist" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  statement_id   = "AllowCloudFrontOACInvokeDist"
+  statement_id   = "${var.project_name}-AllowCloudFrontOACInvokeDist"
   action         = "lambda:InvokeFunction"
   function_name  = aws_lambda_function.dr[0].function_name
   principal      = "cloudfront.amazonaws.com"
