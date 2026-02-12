@@ -45,7 +45,7 @@ provider "aws" {
 
 # Deploy the module
 module "ssr" {
-  source = "github.com/apitanga/serverless-ssr-module"
+  source = "github.com/pomo-studio/serverless-ssr-module"
 
   providers = {
     aws.primary = aws.primary
@@ -104,7 +104,7 @@ This file contains all the resource IDs and configuration your application needs
 Clone and deploy the companion application template:
 
 ```bash
-git clone https://github.com/apitanga/serverless-ssr-app.git my-app
+git clone https://github.com/pomo-studio/serverless-ssr-app.git my-app
 cd my-app
 
 # Copy infrastructure config

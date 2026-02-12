@@ -493,7 +493,7 @@ If you're still stuck:
    terraform apply
    ```
 
-3. **Search issues:** [GitHub Issues](https://github.com/apitanga/serverless-ssr-module/issues)
+3. **Search issues:** [GitHub Issues](https://github.com/pomo-studio/serverless-ssr-module/issues)
 
 4. **Open an issue:** Include:
    - Terraform version

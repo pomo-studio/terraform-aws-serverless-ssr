@@ -2,7 +2,7 @@
 
 Terraform module for deploying SSR applications (Nuxt, Next.js, Nitro) on AWS Lambda with multi-region failover.
 
-**Live example:** [ssr.pomo.dev](https://ssr.pomo.dev) — source at [apitanga/pomo-ssr](https://github.com/apitanga/pomo-ssr)
+**Live example:** [ssr.pomo.dev](https://ssr.pomo.dev) — source at [pomo-studio/pomo-ssr](https://github.com/pomo-studio/pomo-ssr)
 
 ---
 
@@ -31,7 +31,7 @@ Optional: ACM certificate + Route 53 alias record for a custom domain.
 
 ```hcl
 module "ssr" {
-  source = "github.com/apitanga/serverless-ssr-module?ref=v2.0.0"
+  source = "github.com/pomo-studio/serverless-ssr-module?ref=v2.2.3"
 
   providers = {
     aws.primary = aws.primary
@@ -50,7 +50,7 @@ Output: `https://d111111abcdef8.cloudfront.net`
 
 ```hcl
 module "ssr" {
-  source = "github.com/apitanga/serverless-ssr-module?ref=v2.0.0"
+  source = "github.com/pomo-studio/serverless-ssr-module?ref=v2.2.3"
 
   providers = {
     aws.primary = aws.primary
@@ -72,7 +72,7 @@ Output: `https://app.example.com` — DNS and ACM certificate created automatica
 
 ```hcl
 module "ssr" {
-  source = "github.com/apitanga/serverless-ssr-module?ref=v2.0.0"
+  source = "github.com/pomo-studio/serverless-ssr-module?ref=v2.2.3"
 
   providers = {
     aws.primary = aws.primary
@@ -136,7 +136,7 @@ permissions:
     aws-region: us-east-1
 ```
 
-See the [pomo-ssr deploy workflow](https://github.com/apitanga/pomo-ssr/blob/main/.github/workflows/deploy.yml) for a complete example.
+See the [pomo-ssr deploy workflow](https://github.com/pomo-studio/pomo-ssr/blob/main/.github/workflows/deploy.yml) for a complete example.
 
 ### Legacy — IAM user (not recommended)
 
@@ -259,8 +259,8 @@ terraform output -json > config/infra-outputs.json
 
 ## Related
 
-- [pomo-ssr](https://github.com/apitanga/pomo-ssr) — demo site using this module (Nuxt 3, multi-region, OIDC CI/CD)
-- [pomo-dev](https://github.com/apitanga/pomo-dev) — postmodern. Terraform pattern library, production site using this module
+- [pomo-ssr](https://github.com/pomo-studio/pomo-ssr) — demo site using this module (Nuxt 3, multi-region, OIDC CI/CD)
+- [pomo-dev](https://github.com/pomo-studio/pomo-dev) — postmodern. Terraform pattern library, production site using this module
 
 ---
 

@@ -50,7 +50,7 @@ jobs:
             
             ```hcl
             module "ssr" {
-              source = "github.com/apitanga/serverless-ssr-module?ref=${{ steps.get_version.outputs.VERSION }}"
+              source = "github.com/pomo-studio/serverless-ssr-module?ref=${{ steps.get_version.outputs.VERSION }}"
               
               project_name = "my-app"
               domain_name  = "example.com"
@@ -60,7 +60,7 @@ jobs:
             
             ## Full Documentation
             
-            See [README.md](https://github.com/apitanga/serverless-ssr-module/blob/${{ steps.get_version.outputs.VERSION }}/README.md) for complete documentation.
+            See [README.md](https://github.com/pomo-studio/serverless-ssr-module/blob/${{ steps.get_version.outputs.VERSION }}/README.md) for complete documentation.
           draft: false
           prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
 

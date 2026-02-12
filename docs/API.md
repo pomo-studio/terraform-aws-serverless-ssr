@@ -161,7 +161,7 @@ terraform output -json app_config > config/infra-outputs.json
 
 ```hcl
 module "ssr" {
-  source = "github.com/apitanga/serverless-ssr-module"
+  source = "github.com/pomo-studio/serverless-ssr-module"
 
   project_name = "my-app"
   domain_name  = "example.com"
@@ -173,7 +173,7 @@ module "ssr" {
 
 ```hcl
 module "ssr" {
-  source = "github.com/apitanga/serverless-ssr-module"
+  source = "github.com/pomo-studio/serverless-ssr-module"
 
   project_name = "my-app"
   domain_name  = "example.com"
@@ -187,7 +187,7 @@ module "ssr" {
 
 ```hcl
 module "ssr" {
-  source = "github.com/apitanga/serverless-ssr-module"
+  source = "github.com/pomo-studio/serverless-ssr-module"
 
   # Project
   project_name = "my-production-app"
@@ -223,7 +223,7 @@ module "ssr" {
 
 ```hcl
 module "ssr" {
-  source = "github.com/apitanga/serverless-ssr-module"
+  source = "github.com/pomo-studio/serverless-ssr-module"
 
   project_name = "my-app"
   domain_name  = "example.com"

@@ -41,8 +41,8 @@ resource "aws_iam_role" "github_actions" {
           }
           StringLike = {
             "token.actions.githubusercontent.com:sub" = [
-              "repo:apitanga/serverless-ssr-pattern:ref:refs/heads/main",
-              "repo:apitanga/serverless-ssr-pattern:pull_request"
+              "repo:pomo-studio/serverless-ssr-module:ref:refs/heads/main",
+              "repo:pomo-studio/serverless-ssr-module:pull_request"
             ]
           }
         }
