@@ -161,7 +161,8 @@ terraform output -json app_config > config/infra-outputs.json
 
 ```hcl
 module "ssr" {
-  source = "github.com/pomo-studio/terraform-aws-serverless-ssr"
+  source  = "pomo-studio/serverless-ssr/aws"
+  version = "~> 2.2"
 
   project_name = "my-app"
   domain_name  = "example.com"
@@ -173,7 +174,8 @@ module "ssr" {
 
 ```hcl
 module "ssr" {
-  source = "github.com/pomo-studio/terraform-aws-serverless-ssr"
+  source  = "pomo-studio/serverless-ssr/aws"
+  version = "~> 2.2"
 
   project_name = "my-app"
   domain_name  = "example.com"
@@ -187,7 +189,8 @@ module "ssr" {
 
 ```hcl
 module "ssr" {
-  source = "github.com/pomo-studio/terraform-aws-serverless-ssr"
+  source  = "pomo-studio/serverless-ssr/aws"
+  version = "~> 2.2"
 
   # Project
   project_name = "my-production-app"
@@ -223,7 +226,8 @@ module "ssr" {
 
 ```hcl
 module "ssr" {
-  source = "github.com/pomo-studio/terraform-aws-serverless-ssr"
+  source  = "pomo-studio/serverless-ssr/aws"
+  version = "~> 2.2"
 
   project_name = "my-app"
   domain_name  = "example.com"

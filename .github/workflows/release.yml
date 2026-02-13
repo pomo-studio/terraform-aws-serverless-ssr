@@ -50,8 +50,9 @@ jobs:
             
             ```hcl
             module "ssr" {
-              source = "github.com/pomo-studio/terraform-aws-serverless-ssr?ref=${{ steps.get_version.outputs.VERSION }}"
-              
+              source  = "pomo-studio/serverless-ssr/aws"
+              version = "~> 2.2"
+
               project_name = "my-app"
               domain_name  = "example.com"
               subdomain    = "app"
