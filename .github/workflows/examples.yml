@@ -52,11 +52,17 @@ jobs:
         working-directory: ${{ matrix.example }}
         run: terraform validate
 
-      - name: Terraform Plan (Full Plan)
-        if: secrets.AWS_ACCESS_KEY_ID != ''
+      - name: Terraform Plan
         working-directory: ${{ matrix.example }}
-        run: terraform plan -input=false
+        run: |
+          if [ -n "$AWS_ACCESS_KEY_ID" ] && [ "$AWS_ACCESS_KEY_ID" != "fake" ]; then
+            echo "Running terraform plan with provided credentials..."
+            terraform plan -input=false
+          else
+            echo "No AWS credentials provided. Skipping terraform plan."
+            echo "To run a full plan, set AWS_ACCESS_KEY_ID and AWS_SECRET_ACCESS_KEY secrets."
+          fi
         env:
           AWS_REGION: us-east-1
-          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID || 'fake' }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY || 'fake' }}
