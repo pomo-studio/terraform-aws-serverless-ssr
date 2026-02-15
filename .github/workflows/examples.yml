@@ -53,13 +53,13 @@ jobs:
         run: terraform validate
 
       # Only run plan if AWS credentials are configured
-      # For OIDC: set AWS_ROLE_ARN secret or AWS_ACCOUNT_ID + standard role name
+      # Requires AWS_ROLE_ARN secret (full role ARN from pomo core outputs)
       - name: Configure AWS Credentials (OIDC)
         id: aws_auth
         continue-on-error: true
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          role-to-assume: ${{ secrets.AWS_ROLE_ARN || format('arn:aws:iam::{0}:role/github-actions-terraform-aws-serverless-ssr', secrets.AWS_ACCOUNT_ID) }}
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
           aws-region: us-east-1
 
       - name: Terraform Plan
@@ -70,7 +70,5 @@ jobs:
       - name: Skip Plan Notice
         if: steps.aws_auth.outcome != 'success'
         run: |
-          echo "::notice::Skipping terraform plan - OIDC credentials not configured."
-          echo "To enable plan testing, configure one of:"
-          echo "  - AWS_ROLE_ARN secret (full role ARN)"
-          echo "  - AWS_ACCOUNT_ID secret (uses default role name pattern)"
+          echo "::notice::Skipping terraform plan - OIDC not configured."
+          echo "To enable: Add AWS_ROLE_ARN secret with the role ARN from pomo core outputs:"
