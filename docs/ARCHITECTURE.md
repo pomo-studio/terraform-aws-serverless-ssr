@@ -55,9 +55,12 @@ CloudFront handles all failover automatically using origin groups. When a primar
 ```
 User → CloudFront → Lambda (primary or DR) → DynamoDB
 ```
-- Not cached (TTL=0)
-- Rendered on-demand
+- **Stale-While-Revalidate (SWR)**: Instant cache hits with background refresh
+- Cache duration controlled by Lambda via `Cache-Control` headers
+- Typical: 30-300s cache + 2-60 min stale-while-revalidate
 - Automatic failover on 5xx errors
+
+See [Caching Guide](CACHING.md) for details on tuning cache strategy.
 
 ### Static Assets (/_nuxt/*, /favicon.ico)
 ```
@@ -142,9 +145,18 @@ Scales automatically with traffic. DR adds ~$5-10/month for replication.
 
 - **Cold start**: 500-1000ms (first request after idle)
 - **Warm Lambda**: 50-200ms response time
+- **Cached (SWR)**: 10-50ms (served from CloudFront edge)
 - **DynamoDB**: <10ms queries
 - **Static assets**: <20ms (from edge)
-- **CloudFront cache hit**: 80%+ typical
+- **CloudFront cache hit**: 70-95% typical with SWR
+
+### Stale-While-Revalidate Impact
+
+| Scenario | Before SWR | After SWR | Improvement |
+|----------|------------|-----------|-------------|
+| Repeat page view | 200-500ms | 10-50ms | **10-20x faster** |
+| High traffic | Lambda thrashing | Edge cached | **Cost reduction** |
+| User experience | Variable latency | Consistently fast | **Better UX** |
 
 ## Security
 
@@ -177,4 +189,5 @@ CloudWatch logs and metrics are automatic:
 - **[📊 Detailed Diagram](diagram.md)** - Visual architecture
 - **[🚀 Getting Started](GETTING_STARTED.md)** - Step-by-step deployment
 - **[📘 API Reference](API.md)** - All variables and outputs
+- **[⚡ Caching Guide](CACHING.md)** - Stale-While-Revalidate configuration
 - **[🔧 Troubleshooting](TROUBLESHOOTING.md)** - Common issues

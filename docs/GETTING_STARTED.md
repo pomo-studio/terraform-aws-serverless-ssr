@@ -156,10 +156,27 @@ Visit your application URL (from `application_url` output):
 terraform output application_url
 ```
 
+### Test Stale-While-Revalidate Caching
+
+The bootstrap page includes SWR headers. Verify caching is working:
+
+```bash
+# First request (cache miss, hits Lambda)
+curl -I $(terraform output -raw application_url)
+# Look for: x-cache: Miss from cloudfront
+
+# Second request (cache hit, instant!)
+curl -I $(terraform output -raw application_url)
+# Look for: x-cache: Hit from cloudfront
+```
+
+When you deploy your application, implement cache headers as shown in [Caching Guide](CACHING.md).
+
 ## Next Steps
 
 - [Configure CI/CD](CI_CD.md) for automated deployments
 - [Architecture Overview](ARCHITECTURE.md) to understand the infrastructure
+- [Caching Guide](CACHING.md) to optimize page load performance
 - [API Reference](API.md) for all configuration options
 
 ## Troubleshooting

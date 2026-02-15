@@ -110,15 +110,15 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
-  # Default cache behavior (SSR - dynamic content)
+  # Default cache behavior (SSR - dynamic content with Stale-While-Revalidate)
   default_cache_behavior {
     allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "origin-group-primary-dr"
 
-    # Cache policies are required for CloudFront OAC + Lambda Function URL.
-    # Legacy forwarded_values prevents OAC from signing requests (AccessDeniedException).
-    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    # Custom cache policy that honors origin Cache-Control headers
+    # Enables Stale-While-Revalidate pattern for instant page loads
+    cache_policy_id          = aws_cloudfront_cache_policy.ssr_swr.id
     origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
 
     viewer_protocol_policy = "redirect-to-https"
@@ -212,4 +212,46 @@ resource "aws_cloudfront_origin_access_control" "lambda" {
   origin_access_control_origin_type = "lambda"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
+}
+
+# Cache Policy for SSR with Stale-While-Revalidate
+# -----------------------------------------------------------------------------
+# This policy enables the SWR pattern:
+# - CloudFront serves cached content immediately (fast!)
+# - Background fetch updates the cache (fresh content)
+# - Lambda controls caching via Cache-Control headers
+#
+# Cache-Control header examples from Lambda:
+#   - public, max-age=60, stale-while-revalidate=300
+#     → Cache 60s, serve stale for 300s while revalidating
+#   - no-store
+#     → Never cache (for private pages)
+#   - public, max-age=0, stale-while-revalidate=60
+#     → Always serve from cache, refresh in background (max 60s stale)
+
+resource "aws_cloudfront_cache_policy" "ssr_swr" {
+  provider = aws.primary
+
+  name        = "${local.app_name}-ssr-swr"
+  comment     = "SSR with Stale-While-Revalidate support"
+  default_ttl = 60    # Fallback if no Cache-Control header
+  max_ttl     = 86400 # 24 hours max (overridden by s-maxage if present)
+
+  # Honor origin Cache-Control headers - this is key for SWR
+  parameters_in_cache_key_and_forwarded_to_origin {
+    enable_accept_encoding_gzip   = true
+    enable_accept_encoding_brotli = true
+
+    headers_config {
+      header_behavior = "none"
+    }
+
+    cookies_config {
+      cookie_behavior = "none"
+    }
+
+    query_strings_config {
+      query_string_behavior = "none"
+    }
+  }
 }

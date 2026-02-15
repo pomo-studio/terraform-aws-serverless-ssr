@@ -21,6 +21,8 @@ CloudFront (Global CDN + Origin Groups)
 
 CloudFront origin groups fail over automatically on any 5xx response — no Route 53 health checks required.
 
+**Stale-While-Revalidate (SWR) caching** gives instant page loads from CloudFront edge locations while Lambda refreshes content in the background. See [Caching Guide](docs/CACHING.md) for details.
+
 Optional: ACM certificate + Route 53 alias record for a custom domain.
 
 ---
@@ -251,6 +253,7 @@ terraform output -json > config/infra-outputs.json
 
 - [Getting Started](docs/GETTING_STARTED.md) — first deployment walkthrough
 - [Architecture](docs/ARCHITECTURE.md) — CloudFront origin groups, failover, cost breakdown
+- [Caching](docs/CACHING.md) — Stale-While-Revalidate configuration and tuning
 - [Domain Setup](docs/DOMAIN_SETUP.md) — migrating a domain to Route 53
 - [API Reference](docs/API.md) — full input/output reference
 - [Troubleshooting](docs/TROUBLESHOOTING.md)
