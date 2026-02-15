@@ -23,10 +23,6 @@ jobs:
     strategy:
       matrix:
         example: ["examples/basic", "examples/complete"]
-    # Required for OIDC
-    permissions:
-      id-token: write
-      contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -48,14 +44,6 @@ jobs:
           create_ci_cd_user = false
           EOF
 
-      - name: Configure AWS Credentials (OIDC)
-        id: aws_auth
-        continue-on-error: true
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          role-to-assume: arn:aws:iam::${{ secrets.AWS_ACCOUNT_ID }}:role/github-actions-serverless-ssr-examples
-          aws-region: us-east-1
-
       - name: Terraform Init
         working-directory: ${{ matrix.example }}
         run: terraform init -backend=false
@@ -64,36 +52,25 @@ jobs:
         working-directory: ${{ matrix.example }}
         run: terraform validate
 
-      - name: Terraform Plan (with AWS)
+      # Only run plan if AWS credentials are configured
+      # For OIDC: set AWS_ROLE_ARN secret or AWS_ACCOUNT_ID + standard role name
+      - name: Configure AWS Credentials (OIDC)
+        id: aws_auth
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN || format('arn:aws:iam::{0}:role/github-actions-terraform-aws-serverless-ssr', secrets.AWS_ACCOUNT_ID) }}
+          aws-region: us-east-1
+
+      - name: Terraform Plan
         if: steps.aws_auth.outcome == 'success'
         working-directory: ${{ matrix.example }}
         run: terraform plan -input=false
 
-      - name: Terraform Plan (without AWS - dry run)
+      - name: Skip Plan Notice
         if: steps.aws_auth.outcome != 'success'
-        working-directory: ${{ matrix.example }}
         run: |
-          echo "::notice::Running plan without AWS credentials (fork PR). Using mock values for validation."
-          # Create a local providers file to skip credential validation
-          cat > ci_providers.tf << 'EOF'
-          provider "aws" {
-            alias                       = "primary"
-            region                      = "us-east-1"
-            skip_credentials_validation = true
-            skip_requesting_account_id  = true
-            skip_metadata_api_check     = true
-            access_key                  = "mock"
-            secret_key                  = "mock"
-          }
-          provider "aws" {
-            alias                       = "dr"
-            region                      = "us-west-2"
-            skip_credentials_validation = true
-            skip_requesting_account_id  = true
-            skip_metadata_api_check     = true
-            access_key                  = "mock"
-            secret_key                  = "mock"
-          }
-          EOF
-          terraform plan -input=false || true
-          rm -f ci_providers.tf
+          echo "::notice::Skipping terraform plan - OIDC credentials not configured."
+          echo "To enable plan testing, configure one of:"
+          echo "  - AWS_ROLE_ARN secret (full role ARN)"
+          echo "  - AWS_ACCOUNT_ID secret (uses default role name pattern)"
