@@ -255,6 +255,18 @@ terraform output -json > config/infra-outputs.json
 
 ---
 
+## Design decisions
+
+**CloudFront origin groups for DR failover** — 5xx responses automatically retry against the DR Lambda. No Route 53 health checks, no DNS TTL delay.
+
+**Stale-While-Revalidate caching** — CloudFront serves cached responses instantly while Lambda refreshes content in the background. Lambda controls freshness via `Cache-Control` headers; the module's cache policy honours them.
+
+**Origin-secret header instead of OAC** — CloudFront injects a `X-Origin-Secret` header on every request; the Lambda checks it and returns 403 if absent. Direct Lambda URL access is blocked without the AWS_IAM signing complexity.
+
+**Both providers required even with `enable_dr = false`** — provider aliases are declared at plan time; Terraform requires both `aws.primary` and `aws.dr` to be passed regardless. Use the same region for both in dev/staging to avoid the cost of a second region.
+
+**Static assets on S3, SSR on Lambda** — `/_nuxt/*` and `/favicon.ico` have dedicated S3 cache behaviors with long TTLs. Everything else hits Lambda. Keeps CDN costs low and Lambda invocations focused on actual SSR work.
+
 ## Documentation
 
 - [Getting Started](docs/GETTING_STARTED.md) — first deployment walkthrough
