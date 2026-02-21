@@ -110,9 +110,25 @@ resource "aws_cloudfront_distribution" "main" {
     }
   }
 
+  # API routes cache behavior — direct to primary Lambda (origin groups prohibit POST/PUT/PATCH/DELETE)
+  # CloudFront cannot retry non-idempotent methods on a failover origin, so /api/* bypasses the
+  # origin group and targets the primary Lambda directly. Caching is disabled for all API routes.
+  ordered_cache_behavior {
+    path_pattern     = "/api/*"
+    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    cached_methods   = ["GET", "HEAD"]
+    target_origin_id = "primary-lambda"
+
+    cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
+
+    viewer_protocol_policy = "redirect-to-https"
+    compress               = true
+  }
+
   # Default cache behavior (SSR - dynamic content with Stale-While-Revalidate)
   default_cache_behavior {
-    allowed_methods  = ["DELETE", "GET", "HEAD", "OPTIONS", "PATCH", "POST", "PUT"]
+    allowed_methods  = ["GET", "HEAD", "OPTIONS"]
     cached_methods   = ["GET", "HEAD"]
     target_origin_id = "origin-group-primary-dr"
 
