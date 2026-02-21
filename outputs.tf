@@ -138,6 +138,15 @@ output "app_config" {
   }
 }
 
+# Origin Secret
+# ------------------------------------------------------------------------------
+
+output "origin_secret" {
+  description = "Secret value CloudFront injects as X-Origin-Secret header. App verifies this to block direct Lambda URL access."
+  value       = random_uuid.origin_secret.result
+  sensitive   = true
+}
+
 # DNS Records for Manual Configuration
 # ------------------------------------------------------------------------------
 # If domain is NOT managed by Route53, these records must be added manually
