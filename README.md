@@ -2,7 +2,13 @@
 
 Terraform module for deploying SSR applications (Nuxt, Next.js, Nitro) on AWS Lambda with multi-region failover.
 
-**Live example:** [ssr.pomo.dev](https://ssr.pomo.dev) — source at [pomo-studio/pomo-ssr](https://github.com/pomo-studio/pomo-ssr)
+- Multi-region Lambda (us-east-1 + us-west-2) with CloudFront automatic failover — no Route 53 health checks needed
+- Stale-While-Revalidate caching for instant page loads while Lambda refreshes content in the background
+- Direct Lambda URL access blocked by origin-secret — only CloudFront can invoke the function
+- Custom domain + ACM certificate fully automated for Route 53-managed zones
+- Optional DynamoDB global table for visit/session data, replicated to DR automatically
+
+**Registry**: `pomo-studio/serverless-ssr/aws` | **Live example**: [ssr.pomo.dev](https://ssr.pomo.dev)
 
 ---
 
@@ -34,7 +40,7 @@ Optional: ACM certificate + Route 53 alias record for a custom domain.
 ```hcl
 module "ssr" {
   source  = "pomo-studio/serverless-ssr/aws"
-  version = "~> 2.2"
+  version = "~> 2.4"
 
   providers = {
     aws.primary = aws.primary
@@ -54,7 +60,7 @@ Output: `https://d111111abcdef8.cloudfront.net`
 ```hcl
 module "ssr" {
   source  = "pomo-studio/serverless-ssr/aws"
-  version = "~> 2.2"
+  version = "~> 2.4"
 
   providers = {
     aws.primary = aws.primary
@@ -77,7 +83,7 @@ Output: `https://app.example.com` — DNS and ACM certificate created automatica
 ```hcl
 module "ssr" {
   source  = "pomo-studio/serverless-ssr/aws"
-  version = "~> 2.2"
+  version = "~> 2.4"
 
   providers = {
     aws.primary = aws.primary
