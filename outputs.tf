@@ -141,11 +141,12 @@ output "app_config" {
 # Origin Secret
 # ------------------------------------------------------------------------------
 
-output "origin_secret" {
-  description = "Secret value CloudFront injects as X-Origin-Secret header. App verifies this to block direct Lambda URL access."
-  value       = random_uuid.origin_secret.result
-  sensitive   = true
-}
+# Note: Removed in v2.4.1 - AWS_IAM authentication replaces X-Origin-Secret header validation
+# output "origin_secret" {
+#   description = "Secret value CloudFront injects as X-Origin-Secret header. App verifies this to block direct Lambda URL access."
+#   value       = random_uuid.origin_secret.result
+#   sensitive   = true
+# }
 
 # DNS Records for Manual Configuration
 # ------------------------------------------------------------------------------

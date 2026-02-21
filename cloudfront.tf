@@ -1,3 +1,34 @@
+# Custom origin request policy for Lambda Function URLs
+# Excludes Content-Length and Transfer-Encoding headers which CloudFront modifies
+# after signing, causing signature validation failures with AWS_IAM auth
+resource "aws_cloudfront_origin_request_policy" "lambda_no_body_headers" {
+  provider = aws.primary
+  name     = "${local.app_name}-lambda-no-body-headers"
+  comment  = "For Lambda Function URLs with AWS_IAM auth - excludes problematic body headers"
+
+  cookies_config {
+    cookie_behavior = "all"
+  }
+
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = [
+        "Origin",
+        "Access-Control-Request-Headers",
+        "Access-Control-Request-Method",
+        "X-Origin-Region",
+        # Intentionally excluding: Content-Length, Transfer-Encoding
+        # These headers are modified by CloudFront after signing
+      ]
+    }
+  }
+
+  query_strings_config {
+    query_string_behavior = "all"
+  }
+}
+
 # CloudFront Distribution with Origin Failover
 
 resource "aws_cloudfront_distribution" "main" {
@@ -43,8 +74,6 @@ resource "aws_cloudfront_distribution" "main" {
   }
 
   # Primary Origin (us-east-1 Lambda Function URL)
-  # X-Origin-Secret: CloudFront injects this header; app verifies it.
-  # Direct Lambda URL access lacks the header and receives 403.
   origin {
     domain_name = regex("https://([^/]+)/?", aws_lambda_function_url.primary.function_url)[0]
     origin_id   = "primary-lambda"
@@ -59,11 +88,6 @@ resource "aws_cloudfront_distribution" "main" {
     custom_header {
       name  = "X-Origin-Region"
       value = var.primary_region
-    }
-
-    custom_header {
-      name  = "X-Origin-Secret"
-      value = random_uuid.origin_secret.result
     }
   }
 
@@ -82,11 +106,6 @@ resource "aws_cloudfront_distribution" "main" {
     custom_header {
       name  = "X-Origin-Region"
       value = var.dr_region
-    }
-
-    custom_header {
-      name  = "X-Origin-Secret"
-      value = random_uuid.origin_secret.result
     }
   }
 
@@ -130,7 +149,7 @@ resource "aws_cloudfront_distribution" "main" {
     target_origin_id = "primary-lambda"
 
     cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
-    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.lambda_no_body_headers.id
 
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
@@ -145,7 +164,7 @@ resource "aws_cloudfront_distribution" "main" {
     # Custom cache policy that honors origin Cache-Control headers
     # Enables Stale-While-Revalidate pattern for instant page loads
     cache_policy_id          = aws_cloudfront_cache_policy.ssr_swr.id
-    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.lambda_no_body_headers.id
 
     viewer_protocol_policy = "redirect-to-https"
     compress               = true

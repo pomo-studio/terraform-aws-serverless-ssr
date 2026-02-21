@@ -276,7 +276,7 @@ locals {
       PRIMARY_REGION = var.primary_region
       DR_REGION      = var.dr_region
       PROJECT_NAME   = var.project_name
-      ORIGIN_SECRET  = random_uuid.origin_secret.result
+      # ORIGIN_SECRET removed in v2.4.1 - AWS_IAM authentication replaces X-Origin-Secret header validation
     },
     var.enable_dynamo ? { DYNAMODB_TABLE = aws_dynamodb_table.visits_primary[0].name } : {}
   )
@@ -385,18 +385,15 @@ resource "aws_iam_role_policy_attachment" "lambda_s3" {
 
 # Lambda Function URLs
 # ------------------------------------------------------------------------------
-# authorization_type = "NONE" because CloudFront OAC UNSIGNED-PAYLOAD signing
-# breaks POST requests on Lambda function URLs (InvalidSignatureException).
-# Security is enforced via a secret custom origin header that CloudFront injects
-# and the Lambda app verifies (ORIGIN_SECRET env var / X-Origin-Secret header).
-
-resource "random_uuid" "origin_secret" {}
+# Using AWS_IAM authorization with custom origin request policy that excludes
+# body headers (Content-Length, Transfer-Encoding) which CloudFront modifies
+# after signing, causing signature validation failures.
 
 resource "aws_lambda_function_url" "primary" {
   provider = aws.primary
 
   function_name      = aws_lambda_function.primary.function_name
-  authorization_type = "NONE"
+  authorization_type = "AWS_IAM"
 }
 
 resource "aws_lambda_function_url" "dr" {
@@ -404,9 +401,27 @@ resource "aws_lambda_function_url" "dr" {
   provider = aws.dr
 
   function_name      = aws_lambda_function.dr[0].function_name
-  authorization_type = "NONE"
+  authorization_type = "AWS_IAM"
 }
 
-# No CloudFront Lambda permissions needed.
-# authorization_type = "NONE" — access is restricted via the X-Origin-Secret
-# custom header that CloudFront injects and the app verifies.
+# CloudFront needs permission to invoke Lambda Function URLs
+resource "aws_lambda_permission" "cloudfront_primary" {
+  provider = aws.primary
+
+  statement_id  = "AllowCloudFrontInvoke"
+  action        = "lambda:InvokeFunctionUrl"
+  function_name = aws_lambda_function.primary.function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.main.arn
+}
+
+resource "aws_lambda_permission" "cloudfront_dr" {
+  count    = var.enable_dr ? 1 : 0
+  provider = aws.dr
+
+  statement_id  = "AllowCloudFrontInvoke"
+  action        = "lambda:InvokeFunctionUrl"
+  function_name = aws_lambda_function.dr[0].function_name
+  principal     = "cloudfront.amazonaws.com"
+  source_arn    = aws_cloudfront_distribution.main.arn
+}
