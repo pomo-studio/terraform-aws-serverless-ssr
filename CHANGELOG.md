@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.3] - 2026-02-22
+
+### Fixed
+- **CloudFront header conflict**: Removed `X-Origin-Region` from origin request policy whitelist
+- The header cannot be both a custom header AND a forward header in CloudFront
+- This fixes AWS validation error: "Header Name with value X-Origin-Region is not allowed as both an origin custom header and a forward header"
+- Restores pre-v2.4.1 behavior where `X-Origin-Region` was only a custom header for region identification
+
 ## [2.4.2] - 2026-02-22
 
 ### Changed
