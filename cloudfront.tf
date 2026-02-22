@@ -11,17 +11,9 @@ resource "aws_cloudfront_origin_request_policy" "lambda_no_body_headers" {
   }
 
   headers_config {
-    header_behavior = "whitelist"
-    headers {
-      items = [
-        "Origin",
-        "Access-Control-Request-Headers",
-        "Access-Control-Request-Method",
-        # X-Origin-Region removed: Cannot be both custom header AND forward header
-        # Intentionally excluding: Content-Length, Transfer-Encoding
-        # These headers are modified by CloudFront after signing
-      ]
-    }
+    header_behavior = "allViewer"
+    # CloudFront automatically excludes problematic body headers (Content-Length, Transfer-Encoding)
+    # when forwarding to origins, which is needed for AWS_IAM authentication
   }
 
   query_strings_config {
