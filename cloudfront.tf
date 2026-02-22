@@ -228,18 +228,7 @@ resource "aws_cloudfront_origin_request_policy" "lambda_signed" {
   }
 
   headers_config {
-    header_behavior = "whitelist"
-    headers {
-      items = [
-        "accept",
-        "accept-language",
-        "cache-control",
-        "content-type",
-        "origin",
-        "referer",
-        "user-agent"
-      ]
-    }
+    header_behavior = "allViewer"
   }
 
   query_strings_config {
