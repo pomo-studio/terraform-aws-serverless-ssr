@@ -9,4 +9,5 @@
 ## Backlog
 
 - TxWatch refactor: move auth and other `/api/*` POST flows from SSR-routed endpoints to an AppSync-owned API boundary.
-- Tracking issue: https://github.com/pomo-studio/terraform-aws-serverless-ssr/issues/2
+- Primary tracking issue (txwatch): https://github.com/pomo-studio/txwatch/issues/1
+- SSR boundary reference issue (closed): https://github.com/pomo-studio/terraform-aws-serverless-ssr/issues/2
