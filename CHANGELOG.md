@@ -5,7 +5,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
-## [2.4.6] - 2026-02-21
+## [2.4.7] - 2026-02-22
+
+### Fixed
+- **Restored full OAC Lambda permissions** — OAC signing requires both `lambda:InvokeFunctionUrl` AND `lambda:InvokeFunction`. v2.4.6 only created the former, causing 403 on fresh deployments (existing sites worked due to leftover v2.3.x permissions)
+- Permissions now match the proven v2.3.2 set: 4 per region (InvokeFunctionUrl + InvokeFunction, scoped by both source_account and source_arn)
+
+## [2.4.6] - 2026-02-22
 
 ### Fixed
 - **Restored CloudFront Origin Access Control (OAC) for Lambda Function URLs** — OAC was removed in v2.4.0 and never re-added, leaving CloudFront unable to sign requests to Lambda with `AWS_IAM` auth, causing 403 on all pages
@@ -16,8 +22,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 The v2.4.0–v2.4.5 regression chain started when OAC was removed to work around a POST signature failure. The actual POST fix (dedicated `/api/*` cache behavior bypassing origin groups) was correct, but the OAC removal was not — it broke all authentication. Versions 2.4.1–2.4.5 attempted to fix symptoms without restoring the OAC.
 
 ### Upgrade Notes
-- Users on v2.3.x: upgrade directly to v2.4.6. Skip v2.4.0–v2.4.5.
-- Users on v2.4.0–v2.4.5: the OAC will be re-created automatically. If you previously removed it from state, Terraform will create a new one — no manual intervention needed.
+- Users on v2.3.x: upgrade directly to v2.4.7. Skip v2.4.0–v2.4.6.
+- Users on v2.4.0–v2.4.6: upgrade to v2.4.7. Fresh deployments on v2.4.6 will have incomplete Lambda permissions.
 
 ## [2.4.5] - 2026-02-22
 
@@ -116,6 +122,7 @@ CloudFront Origin Access Control (OAC) with `authorization_type = "AWS_IAM"` was
 - **Zero-downtime deployments**: Lambda aliases and traffic shifting
 - **Production-ready**: Least-privilege IAM, logging, monitoring
 
+[2.4.7]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.6...v2.4.7
 [2.4.6]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.5...v2.4.6
 [2.4.0]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.3.2...v2.4.0
 [2.3.2]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.3.1...v2.3.2
