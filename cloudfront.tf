@@ -17,7 +17,7 @@ resource "aws_cloudfront_origin_request_policy" "lambda_no_body_headers" {
         "Origin",
         "Access-Control-Request-Headers",
         "Access-Control-Request-Method",
-        "X-Origin-Region",
+        # X-Origin-Region removed: Cannot be both custom header AND forward header
         # Intentionally excluding: Content-Length, Transfer-Encoding
         # These headers are modified by CloudFront after signing
       ]
