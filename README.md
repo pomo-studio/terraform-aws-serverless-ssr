@@ -126,6 +126,11 @@ The module includes a lightweight integration test script that validates:
 - `POST /api/*` behavior (cache behavior + origin group bypass)
 - Optional: direct Lambda Function URL access is blocked (expects 403)
 
+Scope boundary:
+- This module is for SSR web delivery.
+- API POST workflows should live in dedicated API modules (for example AppSync/API Gateway), not in SSR routing behavior.
+- See `docs/ROADMAP.md` for boundary and backlog notes.
+
 Run against a deployed distribution:
 
 ```bash
@@ -148,6 +153,11 @@ make test-integration
 ```
 
 The script lives at `tests/integration.sh` and can be wired into CI once you choose a target environment.
+
+GET-only CI gate:
+- Workflow: `.github/workflows/integration-get.yml`
+- Required repo variable: `SSR_INTEGRATION_BASE_URL` (for example `https://pomo.dev`)
+- Optional repo variable: `SSR_EXPECT_GET_STATUS` (defaults to `200`)
 
 ## CI/CD authentication
 

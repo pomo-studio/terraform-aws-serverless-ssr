@@ -1,0 +1,36 @@
+name: Integration GET Gate
+
+on:
+  pull_request:
+    paths:
+      - '*.tf'
+      - 'tests/integration.sh'
+      - 'README.md'
+      - 'docs/**'
+      - '.github/workflows/integration-get.yml'
+  workflow_dispatch:
+
+jobs:
+  integration-get:
+    name: CloudFront -> Lambda GET
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validate required base URL
+        env:
+          BASE_URL: ${{ vars.SSR_INTEGRATION_BASE_URL }}
+        run: |
+          if [ -z "$BASE_URL" ]; then
+            echo "SSR_INTEGRATION_BASE_URL repo variable is required"
+            exit 1
+          fi
+
+      - name: Run GET-only integration test
+        env:
+          BASE_URL: ${{ vars.SSR_INTEGRATION_BASE_URL }}
+          EXPECT_GET_STATUS: ${{ vars.SSR_EXPECT_GET_STATUS }}
+        run: |
+          EXPECT="${EXPECT_GET_STATUS:-200}"
+          BASE_URL="$BASE_URL" EXPECT_GET_STATUS="$EXPECT" SKIP_POST=1 make test-integration
