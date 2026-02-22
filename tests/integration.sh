@@ -3,6 +3,8 @@ set -euo pipefail
 
 BASE_URL="${BASE_URL:-}"
 API_PATH="${API_PATH:-/api/health}"
+POST_PAYLOAD="${POST_PAYLOAD:-{\"ping\":\"pong\"}}"
+SKIP_POST="${SKIP_POST:-0}"
 GET_PATH="${GET_PATH:-/}"
 EXPECT_GET_STATUS="${EXPECT_GET_STATUS:-200}"
 EXPECT_POST_STATUS="${EXPECT_POST_STATUS:-200}"
@@ -92,17 +94,18 @@ if ! expect_status "GET $GET_PATH" "$EXPECT_GET_STATUS" "$status"; then
 fi
 
 # 2) CloudFront -> Lambda POST /api/* (validates /api/* cache behavior + origin group bypass)
-post_payload='{"ping":"pong"}'
-result=$(request "POST" "$BASE_URL$API_PATH" "$post_payload")
-status="${result%%|*}"
-headers="${result#*|}"; headers="${headers%%|*}"
-body="${result##*|}"
-if ! expect_status "POST $API_PATH" "$EXPECT_POST_STATUS" "$status"; then
-  failures=$((failures+1))
-fi
-if [[ -n "$EXPECT_API_CACHE_CONTROL" ]]; then
-  if ! expect_header_contains "POST $API_PATH" "$headers" "Cache-Control" "$EXPECT_API_CACHE_CONTROL"; then
+if [[ "$SKIP_POST" != "1" && -n "$API_PATH" ]]; then
+  result=$(request "POST" "$BASE_URL$API_PATH" "$POST_PAYLOAD")
+  status="${result%%|*}"
+  headers="${result#*|}"; headers="${headers%%|*}"
+  body="${result##*|}"
+  if ! expect_status "POST $API_PATH" "$EXPECT_POST_STATUS" "$status"; then
     failures=$((failures+1))
+  fi
+  if [[ -n "$EXPECT_API_CACHE_CONTROL" ]]; then
+    if ! expect_header_contains "POST $API_PATH" "$headers" "Cache-Control" "$EXPECT_API_CACHE_CONTROL"; then
+      failures=$((failures+1))
+    fi
   fi
 fi
 

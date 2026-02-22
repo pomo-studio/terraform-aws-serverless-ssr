@@ -138,6 +138,7 @@ Optional inputs:
 ```bash
 BASE_URL=https://your-distribution.example.com \
 API_PATH=/api/health \
+POST_PAYLOAD='{"ping":"pong"}' \
 GET_PATH=/ \
 EXPECT_GET_STATUS=200 \
 EXPECT_POST_STATUS=200 \
