@@ -232,7 +232,6 @@ resource "aws_cloudfront_origin_request_policy" "lambda_signed" {
     headers {
       items = [
         "accept",
-        "accept-encoding",
         "accept-language",
         "cache-control",
         "content-type",
