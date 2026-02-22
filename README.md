@@ -119,6 +119,35 @@ provider "aws" {
 
 ---
 
+## Integration tests (deployed behavior)
+
+The module includes a lightweight integration test script that validates:
+- CloudFront → Lambda access (OAC + `InvokeFunction` permissions)
+- `POST /api/*` behavior (cache behavior + origin group bypass)
+- Optional: direct Lambda Function URL access is blocked (expects 403)
+
+Run against a deployed distribution:
+
+```bash
+cd /home/apitanga/code/terraform-aws-serverless-ssr
+BASE_URL=https://your-distribution.example.com make test-integration
+```
+
+Optional inputs:
+
+```bash
+BASE_URL=https://your-distribution.example.com \
+API_PATH=/api/health \
+GET_PATH=/ \
+EXPECT_GET_STATUS=200 \
+EXPECT_POST_STATUS=200 \
+EXPECT_API_CACHE_CONTROL=no-store \
+LAMBDA_FUNCTION_URL=https://xxxx.lambda-url.us-east-1.on.aws \
+make test-integration
+```
+
+The script lives at `tests/integration.sh` and can be wired into CI once you choose a target environment.
+
 ## CI/CD authentication
 
 ### Recommended — OIDC (no static credentials)

@@ -110,7 +110,7 @@ resource "aws_cloudfront_distribution" "main" {
     target_origin_id = "primary-lambda"
 
     cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
-    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.lambda_signed.id
 
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
@@ -125,7 +125,7 @@ resource "aws_cloudfront_distribution" "main" {
     # Custom cache policy that honors origin Cache-Control headers
     # Enables Stale-While-Revalidate pattern for instant page loads
     cache_policy_id          = aws_cloudfront_cache_policy.ssr_swr.id
-    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
+    origin_request_policy_id = aws_cloudfront_origin_request_policy.lambda_signed.id
 
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
@@ -215,6 +215,40 @@ resource "aws_cloudfront_origin_access_control" "lambda" {
   origin_access_control_origin_type = "lambda"
   signing_behavior                  = "always"
   signing_protocol                  = "sigv4"
+}
+
+# Origin request policy for Lambda Function URLs (OAC signed)
+# Avoid forwarding body headers that CloudFront may rewrite post-signing.
+resource "aws_cloudfront_origin_request_policy" "lambda_signed" {
+  provider = aws.primary
+  name     = "${local.app_name}-lambda-signed"
+
+  cookies_config {
+    cookie_behavior = "all"
+  }
+
+  headers_config {
+    header_behavior = "whitelist"
+    headers {
+      items = [
+        "accept",
+        "accept-encoding",
+        "accept-language",
+        "cache-control",
+        "content-type",
+        "origin",
+        "referer",
+        "user-agent",
+        "x-forwarded-for",
+        "x-forwarded-proto",
+        "x-forwarded-port"
+      ]
+    }
+  }
+
+  query_strings_config {
+    query_string_behavior = "all"
+  }
 }
 
 

@@ -1,8 +1,12 @@
-.PHONY: test fmt validate
+.PHONY: test test-integration fmt validate
 
 ## Run all unit tests
 test:
 	terraform test
+
+## Run integration tests against a deployed CloudFront distribution
+test-integration:
+	./tests/integration.sh
 
 ## Check Terraform formatting
 fmt:
