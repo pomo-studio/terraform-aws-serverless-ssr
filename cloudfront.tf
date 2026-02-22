@@ -237,10 +237,7 @@ resource "aws_cloudfront_origin_request_policy" "lambda_signed" {
         "content-type",
         "origin",
         "referer",
-        "user-agent",
-        "x-forwarded-for",
-        "x-forwarded-proto",
-        "x-forwarded-port"
+        "user-agent"
       ]
     }
   }
