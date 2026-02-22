@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.2] - 2026-02-22
+
+### Changed
+- Extracted `terraform {}` block from `main.tf` into `versions.tf`
+- Added value-prop bullets and Registry badge to README
+- Added `## Design decisions` section to README
+- Updated usage examples to `version = "~> 2.4"`
+
 ## [2.4.1] - 2026-02-21
 
 ### Fixed
