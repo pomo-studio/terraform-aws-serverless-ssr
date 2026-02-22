@@ -77,10 +77,9 @@ resource "aws_cloudfront_distribution" "main" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
 
-    custom_header {
-      name  = "X-Origin-Region"
-      value = var.primary_region
-    }
+    # Note: X-Origin-Region header removed for AWS_IAM authentication
+    # When using AWS_IAM auth, CloudFront signs requests with SigV4
+    # Adding custom headers changes the signature and can cause 403 errors
   }
 
   # DR Origin (us-west-2 Lambda Function URL)
@@ -95,10 +94,9 @@ resource "aws_cloudfront_distribution" "main" {
       origin_ssl_protocols   = ["TLSv1.2"]
     }
 
-    custom_header {
-      name  = "X-Origin-Region"
-      value = var.dr_region
-    }
+    # Note: X-Origin-Region header removed for AWS_IAM authentication
+    # When using AWS_IAM auth, CloudFront signs requests with SigV4
+    # Adding custom headers changes the signature and can cause 403 errors
   }
 
   # Static Assets Origin - Primary (S3)

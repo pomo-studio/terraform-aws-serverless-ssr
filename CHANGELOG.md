@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.5] - 2026-02-22
+
+### Fixed
+- **AWS_IAM authentication signature mismatch**: Removed `X-Origin-Region` custom header from Lambda origins
+- When CloudFront signs requests for AWS_IAM authentication, it includes all headers in the signature calculation
+- The `X-Origin-Region` header (added by CloudFront) was changing the signature, causing Lambda to reject requests with 403 errors
+- This header was a remnant from v2.4.1 security regression and is not needed for AWS_IAM auth
+
 ## [2.4.4] - 2026-02-22
 
 ### Fixed
