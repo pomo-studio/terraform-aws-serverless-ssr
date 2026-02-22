@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.4] - 2026-02-22
+
+### Fixed
+- **AWS_IAM authentication failure**: Changed origin request policy from `whitelist` to `allViewer`
+- The restrictive whitelist policy was preventing CloudFront from forwarding necessary signing headers (like `Authorization`) to Lambda function URLs with AWS_IAM auth
+- CloudFront automatically excludes problematic body headers (`Content-Length`, `Transfer-Encoding`) when using `allViewer`
+- This fixes the 403 Forbidden errors when accessing websites via CloudFront
+
 ## [2.4.3] - 2026-02-22
 
 ### Fixed
