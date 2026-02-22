@@ -5,6 +5,20 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [2.4.6] - 2026-02-21
+
+### Fixed
+- **Restored CloudFront Origin Access Control (OAC) for Lambda Function URLs** — OAC was removed in v2.4.0 and never re-added, leaving CloudFront unable to sign requests to Lambda with `AWS_IAM` auth, causing 403 on all pages
+- **Reverted origin request policy to managed `AllViewerExceptHostHeader`** — the custom `lambda_no_body_headers` policy forwarded all viewer headers including `Host`, which broke SigV4 signature validation
+- This release restores the proven v2.3.2 security model (OAC + SigV4 + managed policy) while keeping v2.4.x improvements (dedicated `/api/*` cache behavior for POST, SWR cache policy)
+
+### Root Cause
+The v2.4.0–v2.4.5 regression chain started when OAC was removed to work around a POST signature failure. The actual POST fix (dedicated `/api/*` cache behavior bypassing origin groups) was correct, but the OAC removal was not — it broke all authentication. Versions 2.4.1–2.4.5 attempted to fix symptoms without restoring the OAC.
+
+### Upgrade Notes
+- Users on v2.3.x: upgrade directly to v2.4.6. Skip v2.4.0–v2.4.5.
+- Users on v2.4.0–v2.4.5: the OAC will be re-created automatically. If you previously removed it from state, Terraform will create a new one — no manual intervention needed.
+
 ## [2.4.5] - 2026-02-22
 
 ### Fixed
@@ -102,6 +116,7 @@ CloudFront Origin Access Control (OAC) with `authorization_type = "AWS_IAM"` was
 - **Zero-downtime deployments**: Lambda aliases and traffic shifting
 - **Production-ready**: Least-privilege IAM, logging, monitoring
 
+[2.4.6]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.5...v2.4.6
 [2.4.0]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.3.2...v2.4.0
 [2.3.2]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.3.1...v2.3.2
 [2.3.1]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.3.0...v2.3.1

@@ -1,26 +1,3 @@
-# Custom origin request policy for Lambda Function URLs
-# Excludes Content-Length and Transfer-Encoding headers which CloudFront modifies
-# after signing, causing signature validation failures with AWS_IAM auth
-resource "aws_cloudfront_origin_request_policy" "lambda_no_body_headers" {
-  provider = aws.primary
-  name     = "${local.app_name}-lambda-no-body-headers"
-  comment  = "For Lambda Function URLs with AWS_IAM auth - excludes problematic body headers"
-
-  cookies_config {
-    cookie_behavior = "all"
-  }
-
-  headers_config {
-    header_behavior = "allViewer"
-    # CloudFront automatically excludes problematic body headers (Content-Length, Transfer-Encoding)
-    # when forwarding to origins, which is needed for AWS_IAM authentication
-  }
-
-  query_strings_config {
-    query_string_behavior = "all"
-  }
-}
-
 # CloudFront Distribution with Origin Failover
 
 resource "aws_cloudfront_distribution" "main" {
@@ -67,8 +44,9 @@ resource "aws_cloudfront_distribution" "main" {
 
   # Primary Origin (us-east-1 Lambda Function URL)
   origin {
-    domain_name = regex("https://([^/]+)/?", aws_lambda_function_url.primary.function_url)[0]
-    origin_id   = "primary-lambda"
+    domain_name              = regex("https://([^/]+)/?", aws_lambda_function_url.primary.function_url)[0]
+    origin_id                = "primary-lambda"
+    origin_access_control_id = aws_cloudfront_origin_access_control.lambda.id
 
     custom_origin_config {
       http_port              = 443
@@ -76,16 +54,13 @@ resource "aws_cloudfront_distribution" "main" {
       origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
     }
-
-    # Note: X-Origin-Region header removed for AWS_IAM authentication
-    # When using AWS_IAM auth, CloudFront signs requests with SigV4
-    # Adding custom headers changes the signature and can cause 403 errors
   }
 
   # DR Origin (us-west-2 Lambda Function URL)
   origin {
-    domain_name = var.enable_dr ? regex("https://([^/]+)/?", aws_lambda_function_url.dr[0].function_url)[0] : ""
-    origin_id   = "dr-lambda"
+    domain_name              = var.enable_dr ? regex("https://([^/]+)/?", aws_lambda_function_url.dr[0].function_url)[0] : ""
+    origin_id                = "dr-lambda"
+    origin_access_control_id = aws_cloudfront_origin_access_control.lambda.id
 
     custom_origin_config {
       http_port              = 443
@@ -93,10 +68,6 @@ resource "aws_cloudfront_distribution" "main" {
       origin_protocol_policy = "https-only"
       origin_ssl_protocols   = ["TLSv1.2"]
     }
-
-    # Note: X-Origin-Region header removed for AWS_IAM authentication
-    # When using AWS_IAM auth, CloudFront signs requests with SigV4
-    # Adding custom headers changes the signature and can cause 403 errors
   }
 
   # Static Assets Origin - Primary (S3)
@@ -139,7 +110,7 @@ resource "aws_cloudfront_distribution" "main" {
     target_origin_id = "primary-lambda"
 
     cache_policy_id          = "4135ea2d-6df8-44a3-9df3-4b5a84be39ad" # Managed-CachingDisabled
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.lambda_no_body_headers.id
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
 
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
@@ -154,7 +125,7 @@ resource "aws_cloudfront_distribution" "main" {
     # Custom cache policy that honors origin Cache-Control headers
     # Enables Stale-While-Revalidate pattern for instant page loads
     cache_policy_id          = aws_cloudfront_cache_policy.ssr_swr.id
-    origin_request_policy_id = aws_cloudfront_origin_request_policy.lambda_no_body_headers.id
+    origin_request_policy_id = "b689b0a8-53d0-40ab-baf2-68738e2966ac" # Managed-AllViewerExceptHostHeader
 
     viewer_protocol_policy = "redirect-to-https"
     compress               = true
@@ -234,6 +205,16 @@ resource "aws_cloudfront_distribution" "main" {
 resource "aws_cloudfront_origin_access_identity" "main" {
   provider = aws.primary
   comment  = "OAI for ${local.app_name} static assets"
+}
+
+# Origin Access Control for Lambda Function URLs (SigV4 signing)
+resource "aws_cloudfront_origin_access_control" "lambda" {
+  provider                          = aws.primary
+  name                              = "${local.app_name}-lambda-oac"
+  description                       = "OAC for ${local.app_name} Lambda Function URLs"
+  origin_access_control_origin_type = "lambda"
+  signing_behavior                  = "always"
+  signing_protocol                  = "sigv4"
 }
 
 
