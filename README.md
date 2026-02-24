@@ -131,6 +131,9 @@ Scope boundary:
 - API POST workflows should live in dedicated API modules (for example AppSync/API Gateway), not in SSR routing behavior.
 - See `docs/ROADMAP.md` for boundary and backlog notes.
 
+Internal note:
+- Decomposition has started behind the existing facade contract (no input/output break); Lambda, DNS/ACM, storage, and CloudFront resources are now managed via internal submodules.
+
 Run against a deployed distribution:
 
 ```bash
