@@ -173,7 +173,7 @@ data "archive_file" "bootstrap" {
 resource "aws_s3_object" "bootstrap_primary" {
   provider = aws.primary
 
-  bucket = aws_s3_bucket.lambda_deployments_primary.id
+  bucket = module.storage.lambda_deployments_primary_id
   key    = "lambda/function.zip"
   source = data.archive_file.bootstrap.output_path
   etag   = data.archive_file.bootstrap.output_md5
@@ -184,85 +184,57 @@ resource "aws_s3_object" "bootstrap_dr" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  bucket = aws_s3_bucket.lambda_deployments_dr[count.index].id
+  bucket = module.storage.lambda_deployments_dr_id
   key    = "lambda/function.zip"
   source = data.archive_file.bootstrap.output_path
   etag   = data.archive_file.bootstrap.output_md5
 }
 
-# Primary Region Lambda
-# ------------------------------------------------------------------------------
+module "lambda_primary" {
+  source = "./modules/lambda"
 
-resource "aws_lambda_function" "primary" {
-  provider = aws.primary
+  providers = {
+    aws = aws.primary
+  }
 
-  function_name = "${local.app_name}-primary"
-  description   = "${var.project_name} - Primary Region (${var.primary_region})"
-  role          = aws_iam_role.lambda_execution.arn
-  handler       = "index.handler"
-  runtime       = "nodejs20.x"
-  memory_size   = var.lambda_memory_size
-  timeout       = var.lambda_timeout
+  function_name         = "${local.app_name}-primary"
+  description           = "${var.project_name} - Primary Region (${var.primary_region})"
+  create_role           = false
+  role_arn              = aws_iam_role.lambda_execution.arn
+  handler               = "index.handler"
+  runtime               = "nodejs20.x"
+  memory_size           = var.lambda_memory_size
+  timeout               = var.lambda_timeout
+  s3_bucket             = module.storage.lambda_deployments_primary_id
+  s3_key                = "lambda/function.zip"
+  environment_variables = local.lambda_environment
+  tags                  = local.common_tags
 
-  # Use bootstrap code from S3
-  s3_bucket = aws_s3_bucket.lambda_deployments_primary.id
-  s3_key    = "lambda/function.zip"
-
-  # Ensure bootstrap code is uploaded first
   depends_on = [aws_s3_object.bootstrap_primary]
-
-  environment {
-    variables = local.lambda_environment
-  }
-
-  tags = local.common_tags
-
-  lifecycle {
-    # Ignore changes to S3 code - app deployment updates this outside Terraform
-    ignore_changes = [
-      s3_bucket,
-      s3_key,
-      s3_object_version,
-    ]
-  }
 }
 
-# DR Region Lambda
-# ------------------------------------------------------------------------------
+module "lambda_dr" {
+  count  = var.enable_dr ? 1 : 0
+  source = "./modules/lambda"
 
-resource "aws_lambda_function" "dr" {
-  count    = var.enable_dr ? 1 : 0
-  provider = aws.dr
+  providers = {
+    aws = aws.dr
+  }
 
-  function_name = "${local.app_name}-dr"
-  description   = "${var.project_name} - DR Region (${var.dr_region})"
-  role          = aws_iam_role.lambda_execution.arn
-  handler       = "index.handler"
-  runtime       = "nodejs20.x"
-  memory_size   = var.lambda_memory_size
-  timeout       = var.lambda_timeout
+  function_name         = "${local.app_name}-dr"
+  description           = "${var.project_name} - DR Region (${var.dr_region})"
+  create_role           = false
+  role_arn              = aws_iam_role.lambda_execution.arn
+  handler               = "index.handler"
+  runtime               = "nodejs20.x"
+  memory_size           = var.lambda_memory_size
+  timeout               = var.lambda_timeout
+  s3_bucket             = module.storage.lambda_deployments_dr_id
+  s3_key                = "lambda/function.zip"
+  environment_variables = local.lambda_environment
+  tags                  = local.common_tags
 
-  # Use bootstrap code from S3
-  s3_bucket = aws_s3_bucket.lambda_deployments_dr[0].id
-  s3_key    = "lambda/function.zip"
-
-  # Ensure bootstrap code is uploaded first
   depends_on = [aws_s3_object.bootstrap_dr]
-
-  environment {
-    variables = local.lambda_environment
-  }
-
-  tags = local.common_tags
-
-  lifecycle {
-    # Ignore changes to S3 code - app deployment updates this outside Terraform
-    ignore_changes = [
-      s3_bucket,
-      s3_key,
-      s3_object_version,
-    ]
-  }
 }
 
 # Lambda Environment Variables
@@ -352,8 +324,8 @@ resource "aws_iam_policy" "lambda_s3" {
           "s3:GetObjectVersion"
         ]
         Resource = concat([
-          "${aws_s3_bucket.lambda_deployments_primary.arn}/lambda/*"
-        ], var.enable_dr ? ["${aws_s3_bucket.lambda_deployments_dr[0].arn}/lambda/*"] : [])
+          "${module.storage.lambda_deployments_primary_arn}/lambda/*"
+        ], var.enable_dr ? ["${module.storage.lambda_deployments_dr_arn}/lambda/*"] : [])
       }
     ]
   })
@@ -392,7 +364,7 @@ resource "aws_iam_role_policy_attachment" "lambda_s3" {
 resource "aws_lambda_function_url" "primary" {
   provider = aws.primary
 
-  function_name      = aws_lambda_function.primary.function_name
+  function_name      = module.lambda_primary.function_name
   authorization_type = "AWS_IAM"
 }
 
@@ -400,7 +372,7 @@ resource "aws_lambda_function_url" "dr" {
   count    = var.enable_dr ? 1 : 0
   provider = aws.dr
 
-  function_name      = aws_lambda_function.dr[0].function_name
+  function_name      = module.lambda_dr[0].function_name
   authorization_type = "AWS_IAM"
 }
 
@@ -413,7 +385,7 @@ resource "aws_lambda_permission" "cloudfront_primary" {
 
   statement_id   = "${var.project_name}-AllowCloudFrontOAC"
   action         = "lambda:InvokeFunctionUrl"
-  function_name  = aws_lambda_function.primary.function_name
+  function_name  = module.lambda_primary.function_name
   principal      = "cloudfront.amazonaws.com"
   source_account = data.aws_caller_identity.current.account_id
 }
@@ -423,9 +395,9 @@ resource "aws_lambda_permission" "cloudfront_primary_dist" {
 
   statement_id  = "${var.project_name}-AllowCloudFrontOACDist"
   action        = "lambda:InvokeFunctionUrl"
-  function_name = aws_lambda_function.primary.function_name
+  function_name = module.lambda_primary.function_name
   principal     = "cloudfront.amazonaws.com"
-  source_arn    = aws_cloudfront_distribution.main.arn
+  source_arn    = module.cloudfront.arn
 }
 
 resource "aws_lambda_permission" "cloudfront_primary_invoke" {
@@ -433,7 +405,7 @@ resource "aws_lambda_permission" "cloudfront_primary_invoke" {
 
   statement_id   = "${var.project_name}-AllowCloudFrontOACInvoke"
   action         = "lambda:InvokeFunction"
-  function_name  = aws_lambda_function.primary.function_name
+  function_name  = module.lambda_primary.function_name
   principal      = "cloudfront.amazonaws.com"
   source_account = data.aws_caller_identity.current.account_id
 }
@@ -443,9 +415,9 @@ resource "aws_lambda_permission" "cloudfront_primary_invoke_dist" {
 
   statement_id  = "${var.project_name}-AllowCloudFrontOACInvokeDist"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.primary.function_name
+  function_name = module.lambda_primary.function_name
   principal     = "cloudfront.amazonaws.com"
-  source_arn    = aws_cloudfront_distribution.main.arn
+  source_arn    = module.cloudfront.arn
 }
 
 resource "aws_lambda_permission" "cloudfront_dr" {
@@ -454,7 +426,7 @@ resource "aws_lambda_permission" "cloudfront_dr" {
 
   statement_id   = "${var.project_name}-AllowCloudFrontOAC"
   action         = "lambda:InvokeFunctionUrl"
-  function_name  = aws_lambda_function.dr[0].function_name
+  function_name  = module.lambda_dr[0].function_name
   principal      = "cloudfront.amazonaws.com"
   source_account = data.aws_caller_identity.current.account_id
 }
@@ -465,9 +437,9 @@ resource "aws_lambda_permission" "cloudfront_dr_dist" {
 
   statement_id  = "${var.project_name}-AllowCloudFrontOACDist"
   action        = "lambda:InvokeFunctionUrl"
-  function_name = aws_lambda_function.dr[0].function_name
+  function_name = module.lambda_dr[0].function_name
   principal     = "cloudfront.amazonaws.com"
-  source_arn    = aws_cloudfront_distribution.main.arn
+  source_arn    = module.cloudfront.arn
 }
 
 resource "aws_lambda_permission" "cloudfront_dr_invoke" {
@@ -476,7 +448,7 @@ resource "aws_lambda_permission" "cloudfront_dr_invoke" {
 
   statement_id   = "${var.project_name}-AllowCloudFrontOACInvoke"
   action         = "lambda:InvokeFunction"
-  function_name  = aws_lambda_function.dr[0].function_name
+  function_name  = module.lambda_dr[0].function_name
   principal      = "cloudfront.amazonaws.com"
   source_account = data.aws_caller_identity.current.account_id
 }
@@ -487,7 +459,7 @@ resource "aws_lambda_permission" "cloudfront_dr_invoke_dist" {
 
   statement_id  = "${var.project_name}-AllowCloudFrontOACInvokeDist"
   action        = "lambda:InvokeFunction"
-  function_name = aws_lambda_function.dr[0].function_name
+  function_name = module.lambda_dr[0].function_name
   principal     = "cloudfront.amazonaws.com"
-  source_arn    = aws_cloudfront_distribution.main.arn
+  source_arn    = module.cloudfront.arn
 }
