@@ -14,9 +14,9 @@ terraform {
 resource "aws_lambda_function" "this" {
   function_name = var.function_name
   description   = var.description
-  role          = var.role_arn != "" ? var.role_arn : aws_iam_role.lambda[0].arn
-  handler       = "index.handler"
-  runtime       = "nodejs22.x"
+  role          = var.create_role ? aws_iam_role.lambda[0].arn : var.role_arn
+  handler       = var.handler
+  runtime       = var.runtime
   memory_size   = var.memory_size
   timeout       = var.timeout
 
@@ -41,11 +41,19 @@ resource "aws_lambda_function" "this" {
   }
 
   tags = var.tags
+
+  lifecycle {
+    ignore_changes = [
+      s3_bucket,
+      s3_key,
+      s3_object_version,
+    ]
+  }
 }
 
 # IAM Role for Lambda (if not provided)
 resource "aws_iam_role" "lambda" {
-  count = var.role_arn == "" ? 1 : 0
+  count = var.create_role ? 1 : 0
   name  = "${var.function_name}-role"
 
   assume_role_policy = jsonencode({
@@ -64,7 +72,7 @@ resource "aws_iam_role" "lambda" {
 
 # Attach basic execution role
 resource "aws_iam_role_policy_attachment" "basic_execution" {
-  count      = var.role_arn == "" ? 1 : 0
+  count      = var.create_role ? 1 : 0
   role       = aws_iam_role.lambda[0].name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }

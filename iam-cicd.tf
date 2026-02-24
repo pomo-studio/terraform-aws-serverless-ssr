@@ -71,15 +71,15 @@ resource "aws_iam_policy" "cicd" {
             "s3:ListBucket"
           ]
           Resource = concat([
-            aws_s3_bucket.lambda_deployments_primary.arn,
-            "${aws_s3_bucket.lambda_deployments_primary.arn}/*",
-            aws_s3_bucket.static_assets.arn,
-            "${aws_s3_bucket.static_assets.arn}/*"
+            module.storage.lambda_deployments_primary_arn,
+            "${module.storage.lambda_deployments_primary_arn}/*",
+            module.storage.static_assets_arn,
+            "${module.storage.static_assets_arn}/*"
             ], var.enable_dr ? [
-            aws_s3_bucket.lambda_deployments_dr[0].arn,
-            "${aws_s3_bucket.lambda_deployments_dr[0].arn}/*",
-            aws_s3_bucket.static_assets_dr[0].arn,
-            "${aws_s3_bucket.static_assets_dr[0].arn}/*"
+            module.storage.lambda_deployments_dr_arn,
+            "${module.storage.lambda_deployments_dr_arn}/*",
+            module.storage.static_assets_dr_arn,
+            "${module.storage.static_assets_dr_arn}/*"
           ] : [])
         },
         {
@@ -98,7 +98,7 @@ resource "aws_iam_policy" "cicd" {
             "cloudfront:GetInvalidation",
             "cloudfront:ListInvalidations"
           ]
-          Resource = "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/${aws_cloudfront_distribution.main.id}"
+          Resource = "arn:aws:cloudfront::${data.aws_caller_identity.current.account_id}:distribution/${module.cloudfront.id}"
         },
         {
           Sid    = "ReadOnlyForVerification"

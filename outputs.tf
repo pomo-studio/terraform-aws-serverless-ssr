@@ -6,12 +6,12 @@
 
 output "lambda_function_name_primary" {
   description = "Primary region Lambda function name"
-  value       = aws_lambda_function.primary.function_name
+  value       = module.lambda_primary.function_name
 }
 
 output "lambda_function_name_dr" {
   description = "DR region Lambda function name"
-  value       = var.enable_dr ? aws_lambda_function.dr[0].function_name : null
+  value       = var.enable_dr ? module.lambda_dr[0].function_name : null
 }
 
 output "lambda_function_url_primary" {
@@ -29,17 +29,17 @@ output "lambda_function_url_dr" {
 
 output "s3_bucket_static" {
   description = "S3 bucket for static assets"
-  value       = aws_s3_bucket.static_assets.id
+  value       = module.storage.static_assets_id
 }
 
 output "s3_bucket_deployments_primary" {
   description = "S3 bucket for Lambda deployments (primary)"
-  value       = aws_s3_bucket.lambda_deployments_primary.id
+  value       = module.storage.lambda_deployments_primary_id
 }
 
 output "s3_bucket_deployments_dr" {
   description = "S3 bucket for Lambda deployments (DR)"
-  value       = var.enable_dr ? aws_s3_bucket.lambda_deployments_dr[0].id : null
+  value       = var.enable_dr ? module.storage.lambda_deployments_dr_id : null
 }
 
 # CloudFront
@@ -47,12 +47,12 @@ output "s3_bucket_deployments_dr" {
 
 output "cloudfront_distribution_id" {
   description = "CloudFront distribution ID for cache invalidation"
-  value       = aws_cloudfront_distribution.main.id
+  value       = module.cloudfront.id
 }
 
 output "cloudfront_domain_name" {
   description = "CloudFront domain name"
-  value       = aws_cloudfront_distribution.main.domain_name
+  value       = module.cloudfront.domain_name
 }
 
 # Application
@@ -60,7 +60,7 @@ output "cloudfront_domain_name" {
 
 output "application_url" {
   description = "Application URL"
-  value       = local.enable_custom_domain ? "https://${local.full_domain}" : "https://${aws_cloudfront_distribution.main.domain_name}"
+  value       = local.enable_custom_domain ? "https://${local.full_domain}" : "https://${module.cloudfront.domain_name}"
 }
 
 output "custom_domain_enabled" {
@@ -113,24 +113,24 @@ output "app_config" {
     dr_region      = var.dr_region
     lambda = {
       primary = {
-        function_name = aws_lambda_function.primary.function_name
+        function_name = module.lambda_primary.function_name
         function_url  = aws_lambda_function_url.primary.function_url
-        s3_bucket     = aws_s3_bucket.lambda_deployments_primary.id
+        s3_bucket     = module.storage.lambda_deployments_primary_id
         s3_key        = "lambda/function.zip"
       }
       dr = var.enable_dr ? {
-        function_name = aws_lambda_function.dr[0].function_name
+        function_name = module.lambda_dr[0].function_name
         function_url  = aws_lambda_function_url.dr[0].function_url
-        s3_bucket     = aws_s3_bucket.lambda_deployments_dr[0].id
+        s3_bucket     = module.storage.lambda_deployments_dr_id
         s3_key        = "lambda/function.zip"
       } : null
     }
     static_assets = {
-      s3_bucket = aws_s3_bucket.static_assets.id
+      s3_bucket = module.storage.static_assets_id
     }
     cloudfront = {
-      distribution_id = aws_cloudfront_distribution.main.id
-      domain_name     = aws_cloudfront_distribution.main.domain_name
+      distribution_id = module.cloudfront.id
+      domain_name     = module.cloudfront.domain_name
     }
     dynamodb = var.enable_dynamo ? {
       table_name = aws_dynamodb_table.visits_primary[0].name
@@ -154,21 +154,10 @@ output "app_config" {
 
 output "dns_validation_records" {
   description = "DNS records for ACM certificate validation (add these to your DNS provider if route53_managed = false)"
-  value = local.enable_custom_domain && !local.enable_route53 ? {
-    for dvo in aws_acm_certificate.main[0].domain_validation_options : dvo.domain_name => {
-      name  = dvo.resource_record_name
-      type  = dvo.resource_record_type
-      value = dvo.resource_record_value
-    }
-  } : {}
+  value       = module.dns.dns_validation_records
 }
 
 output "dns_cloudfront_record" {
   description = "DNS record to point domain to CloudFront (add this to your DNS provider if route53_managed = false)"
-  value = local.enable_custom_domain && !local.enable_route53 ? {
-    name  = local.full_domain
-    type  = "A (Alias) or CNAME"
-    value = aws_cloudfront_distribution.main.domain_name
-    note  = "Use A record (alias) if supported, otherwise CNAME"
-  } : null
+  value       = module.dns.dns_cloudfront_record
 }

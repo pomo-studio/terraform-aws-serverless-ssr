@@ -5,6 +5,30 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [Unreleased]
+
+### Changed
+- Began internal decomposition of Lambda resources behind the existing root facade:
+  - root `lambda.tf` now instantiates internal `modules/lambda` for primary and DR Lambda functions
+  - root outputs and permissions now reference module outputs instead of direct root Lambda resources
+- Continued decomposition with DNS/ACM extraction:
+  - root `route53.tf` now delegates DNS and ACM resources to internal `modules/dns`
+  - root CloudFront and DNS outputs now reference module outputs
+- Continued decomposition with storage extraction:
+  - root `s3.tf` now delegates bucket, policy, and replication resources to internal `modules/storage`
+  - root CloudFront, Lambda bootstrap, CI/CD IAM policy, and outputs now reference storage module outputs
+- Continued decomposition with CloudFront support extraction:
+  - root `cloudfront.tf` now delegates OAI/OAC/origin-request-policy/cache-policy to internal `modules/cloudfront-support`
+  - root distribution and storage module wiring now consume cloudfront-support outputs
+- Continued decomposition with CloudFront distribution extraction:
+  - root `cloudfront.tf` now delegates `aws_cloudfront_distribution.main` to internal `modules/cloudfront`
+  - root route53/lambda/iam-cicd/outputs wiring now consume cloudfront module outputs
+- No consumer-facing input/output contract changes.
+
+### Internal
+- Extended `modules/lambda` inputs (`handler`, `runtime`) and aligned lifecycle behavior for deployment package drift tolerance.
+- Updated unit tests to validate Lambda presence through module handles (`module.lambda_primary`, `module.lambda_dr`).
+
 ## [2.4.7] - 2026-02-22
 
 ### Fixed

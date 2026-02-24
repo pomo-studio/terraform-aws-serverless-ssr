@@ -119,6 +119,49 @@ provider "aws" {
 
 ---
 
+## Integration tests (deployed behavior)
+
+The module includes a lightweight integration test script that validates:
+- CloudFront → Lambda access (OAC + `InvokeFunction` permissions)
+- `POST /api/*` behavior (cache behavior + origin group bypass)
+- Optional: direct Lambda Function URL access is blocked (expects 403)
+
+Scope boundary:
+- This module is for SSR web delivery.
+- API POST workflows should live in dedicated API modules (for example AppSync/API Gateway), not in SSR routing behavior.
+- See `docs/ROADMAP.md` for boundary and backlog notes.
+
+Internal note:
+- Decomposition has started behind the existing facade contract (no input/output break); Lambda, DNS/ACM, storage, and CloudFront resources are now managed via internal submodules.
+
+Run against a deployed distribution:
+
+```bash
+cd /home/apitanga/code/terraform-aws-serverless-ssr
+BASE_URL=https://your-distribution.example.com make test-integration
+```
+
+Optional inputs:
+
+```bash
+BASE_URL=https://your-distribution.example.com \
+API_PATH=/api/health \
+POST_PAYLOAD='{"ping":"pong"}' \
+GET_PATH=/ \
+EXPECT_GET_STATUS=200 \
+EXPECT_POST_STATUS=200 \
+EXPECT_API_CACHE_CONTROL=no-store \
+LAMBDA_FUNCTION_URL=https://xxxx.lambda-url.us-east-1.on.aws \
+make test-integration
+```
+
+The script lives at `tests/integration.sh` and can be wired into CI once you choose a target environment.
+
+GET-only CI gate:
+- Workflow: `.github/workflows/integration-get.yml`
+- Required repo variable: `SSR_INTEGRATION_BASE_URL` (for example `https://pomo.dev`)
+- Optional repo variable: `SSR_EXPECT_GET_STATUS` (defaults to `200`)
+
 ## CI/CD authentication
 
 ### Recommended — OIDC (no static credentials)
