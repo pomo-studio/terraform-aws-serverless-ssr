@@ -20,6 +20,17 @@ jobs:
         id: get_version
         run: echo "VERSION=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
+      - name: Check if release already exists
+        id: release_exists
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          if gh release view "${{ steps.get_version.outputs.VERSION }}" >/dev/null 2>&1; then
+            echo "exists=true" >> $GITHUB_OUTPUT
+          else
+            echo "exists=false" >> $GITHUB_OUTPUT
+          fi
+
       - name: Generate Changelog
         id: changelog
         run: |
@@ -35,6 +46,7 @@ jobs:
           fi
 
       - name: Create Release
+        if: steps.release_exists.outputs.exists == 'false'
         uses: actions/create-release@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -51,7 +63,7 @@ jobs:
             ```hcl
             module "ssr" {
               source  = "pomo-studio/serverless-ssr/aws"
-              version = "~> 2.2"
+              version = "~> 2.4"
 
               project_name = "my-app"
               domain_name  = "example.com"
@@ -60,10 +72,18 @@ jobs:
             ```
             
             ## Full Documentation
-            
+
             See [README.md](https://github.com/pomo-studio/terraform-aws-serverless-ssr/blob/${{ steps.get_version.outputs.VERSION }}/README.md) for complete documentation.
+            
+            ## Release Safety
+            
+            See [docs/RELEASE_CHECKLIST.md](https://github.com/pomo-studio/terraform-aws-serverless-ssr/blob/${{ steps.get_version.outputs.VERSION }}/docs/RELEASE_CHECKLIST.md).
           draft: false
           prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
+
+      - name: Skip duplicate release
+        if: steps.release_exists.outputs.exists == 'true'
+        run: echo "Release ${{ steps.get_version.outputs.VERSION }} already exists; skipping create-release."
 
   # Validate the release works
   validate-release:
