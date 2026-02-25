@@ -4,7 +4,7 @@ Terraform module for deploying SSR applications (Nuxt, Next.js, Nitro) on AWS La
 
 - Multi-region Lambda (us-east-1 + us-west-2) with CloudFront automatic failover — no Route 53 health checks needed
 - Stale-While-Revalidate caching for instant page loads while Lambda refreshes content in the background
-- Direct Lambda URL access blocked by origin-secret — only CloudFront can invoke the function
+- Direct Lambda URL access blocked with CloudFront OAC + AWS IAM auth — only CloudFront can invoke the function
 - Custom domain + ACM certificate fully automated for Route 53-managed zones
 - Optional DynamoDB global table for visit/session data, replicated to DR automatically
 
@@ -133,6 +133,9 @@ Scope boundary:
 
 Internal note:
 - Decomposition has started behind the existing facade contract (no input/output break); Lambda, DNS/ACM, storage, and CloudFront resources are now managed via internal submodules.
+
+Upgrade safety note:
+- Decomposition state migration mappings were completed in `v2.4.9`. If upgrading from pre-decomposition versions, use `v2.4.9+` and verify plan output for no unexpected destroys before apply.
 
 Run against a deployed distribution:
 
@@ -304,7 +307,7 @@ terraform output -json > config/infra-outputs.json
 
 **Stale-While-Revalidate caching** — CloudFront serves cached responses instantly while Lambda refreshes content in the background. Lambda controls freshness via `Cache-Control` headers; the module's cache policy honours them.
 
-**Origin-secret header instead of OAC** — CloudFront injects a `X-Origin-Secret` header on every request; the Lambda checks it and returns 403 if absent. Direct Lambda URL access is blocked without the AWS_IAM signing complexity.
+**CloudFront OAC + AWS_IAM for Lambda URLs** — CloudFront signs origin requests to Lambda Function URLs; `aws_lambda_permission` restricts invocation to CloudFront. Direct Lambda URL access is blocked by IAM authorization.
 
 **Both providers required even with `enable_dr = false`** — provider aliases are declared at plan time; Terraform requires both `aws.primary` and `aws.dr` to be passed regardless. Use the same region for both in dev/staging to avoid the cost of a second region.
 
