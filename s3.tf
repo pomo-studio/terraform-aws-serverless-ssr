@@ -1,5 +1,6 @@
 module "storage" {
-  source = "git::https://github.com/pomo-studio/terraform-aws-ssr-storage.git?ref=v0.1.0"
+  source  = "pomo-studio/ssr-storage/aws"
+  version = "= 0.1.0"
 
   providers = {
     aws    = aws.primary

@@ -1,5 +1,6 @@
 module "dns" {
-  source = "git::https://github.com/pomo-studio/terraform-aws-ssr-dns.git?ref=v0.1.0"
+  source  = "pomo-studio/ssr-dns/aws"
+  version = "= 0.1.0"
 
   providers = {
     aws = aws.primary

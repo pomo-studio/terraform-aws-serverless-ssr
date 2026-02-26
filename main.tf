@@ -6,7 +6,6 @@
 #
 # Example:
 #   module "ssr_platform" {
-#     source = "./modules/ssr-platform"
 #     providers = {
 #       aws.primary = aws.primary
 #       aws.dr      = aws.dr

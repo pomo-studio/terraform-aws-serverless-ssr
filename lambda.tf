@@ -191,7 +191,8 @@ resource "aws_s3_object" "bootstrap_dr" {
 }
 
 module "lambda_primary" {
-  source = "git::https://github.com/pomo-studio/terraform-aws-ssr-lambda.git?ref=v0.1.0"
+  source  = "pomo-studio/ssr-lambda/aws"
+  version = "= 0.1.0"
 
   providers = {
     aws = aws.primary
@@ -214,8 +215,9 @@ module "lambda_primary" {
 }
 
 module "lambda_dr" {
-  count  = var.enable_dr ? 1 : 0
-  source = "git::https://github.com/pomo-studio/terraform-aws-ssr-lambda.git?ref=v0.1.0"
+  count   = var.enable_dr ? 1 : 0
+  source  = "pomo-studio/ssr-lambda/aws"
+  version = "= 0.1.0"
 
   providers = {
     aws = aws.dr
