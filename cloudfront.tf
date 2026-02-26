@@ -1,5 +1,5 @@
 module "cloudfront_support" {
-  source = "./modules/cloudfront-support"
+  source = "git::https://github.com/pomo-studio/terraform-aws-ssr-cloudfront-support.git?ref=v0.1.0"
 
   providers = {
     aws = aws.primary
