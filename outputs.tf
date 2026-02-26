@@ -78,12 +78,12 @@ output "route53_managed" {
 
 output "dynamodb_table_name" {
   description = "DynamoDB table name"
-  value       = var.enable_dynamo ? aws_dynamodb_table.visits_primary[0].name : null
+  value       = var.enable_dynamo ? module.dynamodb[0].table_name_primary : null
 }
 
 output "dynamodb_table_arn" {
   description = "DynamoDB table ARN"
-  value       = var.enable_dynamo ? aws_dynamodb_table.visits_primary[0].arn : null
+  value       = var.enable_dynamo ? module.dynamodb[0].table_arn_primary : null
 }
 
 # CI/CD Credentials (sensitive)
@@ -133,7 +133,7 @@ output "app_config" {
       domain_name     = module.cloudfront.domain_name
     }
     dynamodb = var.enable_dynamo ? {
-      table_name = aws_dynamodb_table.visits_primary[0].name
+      table_name = module.dynamodb[0].table_name_primary
     } : null
   }
 }

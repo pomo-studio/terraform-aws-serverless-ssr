@@ -250,7 +250,7 @@ locals {
       PROJECT_NAME   = var.project_name
       # ORIGIN_SECRET removed in v2.4.1 - AWS_IAM authentication replaces X-Origin-Secret header validation
     },
-    var.enable_dynamo ? { DYNAMODB_TABLE = aws_dynamodb_table.visits_primary[0].name } : {}
+    var.enable_dynamo ? { DYNAMODB_TABLE = module.dynamodb[0].table_name_primary } : {}
   )
 }
 
@@ -297,8 +297,8 @@ resource "aws_iam_policy" "lambda_dynamodb" {
           "dynamodb:Scan"
         ]
         Resource = [
-          aws_dynamodb_table.visits_primary[0].arn,
-          "${aws_dynamodb_table.visits_primary[0].arn}/*"
+          module.dynamodb[0].table_arn_primary,
+          "${module.dynamodb[0].table_arn_primary}/*"
         ]
       }
     ]

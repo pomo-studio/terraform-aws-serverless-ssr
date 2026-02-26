@@ -132,3 +132,13 @@ moved {
   from = aws_acm_certificate_validation.main[0]
   to   = module.dns.aws_acm_certificate_validation.main[0]
 }
+
+moved {
+  from = aws_dynamodb_table.visits_primary[0]
+  to   = module.dynamodb[0].aws_dynamodb_table.primary
+}
+
+moved {
+  from = aws_dynamodb_table_replica.visits_dr[0]
+  to   = module.dynamodb[0].aws_dynamodb_table_replica.dr[0]
+}
