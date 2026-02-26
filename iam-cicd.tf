@@ -15,8 +15,8 @@ locals {
       "dynamodb:DescribeTable"
     ]
     Resource = [
-      aws_dynamodb_table.visits_primary[0].arn,
-      "${aws_dynamodb_table.visits_primary[0].arn}/*"
+      module.dynamodb[0].table_arn_primary,
+      "${module.dynamodb[0].table_arn_primary}/*"
     ]
   }] : []
 }

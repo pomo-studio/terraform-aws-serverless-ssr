@@ -226,7 +226,7 @@ run "dynamodb_configuration" {
   }
 
   assert {
-    condition     = aws_dynamodb_table.visits_primary != null
+    condition     = length(module.dynamodb) == 1
     error_message = "Should create DynamoDB table when enabled"
   }
 }
@@ -246,7 +246,7 @@ run "no_dynamodb_configuration" {
   }
 
   assert {
-    condition     = length(aws_dynamodb_table.visits_primary) == 0
+    condition     = length(module.dynamodb) == 0
     error_message = "Should not create DynamoDB table when disabled"
   }
 }
