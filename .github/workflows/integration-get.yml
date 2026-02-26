@@ -10,6 +10,10 @@ on:
       - '.github/workflows/integration-get.yml'
   workflow_dispatch:
 
+concurrency:
+  group: integration-get-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   integration-get:
     name: CloudFront -> Lambda GET
