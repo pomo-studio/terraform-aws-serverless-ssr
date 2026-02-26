@@ -1,6 +1,7 @@
 module "dynamodb" {
-  count  = var.enable_dynamo ? 1 : 0
-  source = "git::https://github.com/pomo-studio/terraform-aws-dynamodb-global-table.git?ref=v1.0.0"
+  count   = var.enable_dynamo ? 1 : 0
+  source  = "pomo-studio/dynamodb-global-table/aws"
+  version = "= 1.0.0"
 
   providers = {
     aws.primary = aws.primary
