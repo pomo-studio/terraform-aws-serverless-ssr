@@ -1,6 +1,6 @@
 module "dynamodb" {
   count  = var.enable_dynamo ? 1 : 0
-  source = "./modules/dynamodb"
+  source = "git::https://github.com/pomo-studio/terraform-aws-dynamodb-global-table.git?ref=v1.0.0"
 
   providers = {
     aws.primary = aws.primary
@@ -8,6 +8,12 @@ module "dynamodb" {
   }
 
   name      = "${local.app_name}-visits"
+  hash_key  = "PK"
+  range_key = "SK"
+  attributes = [
+    { name = "PK", type = "S" },
+    { name = "SK", type = "S" }
+  ]
   enable_dr = var.enable_dr
   tags      = local.common_tags
 }
