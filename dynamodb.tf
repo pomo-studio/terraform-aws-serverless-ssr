@@ -14,8 +14,9 @@ module "dynamodb" {
     { name = "PK", type = "S" },
     { name = "SK", type = "S" }
   ]
-  enable_dr = var.enable_dr
-  tags      = local.common_tags
+  enable_pitr = false
+  enable_dr   = var.enable_dr
+  tags        = local.common_tags
 }
 
 resource "aws_dynamodb_table_item" "counter" {
