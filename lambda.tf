@@ -5,61 +5,7 @@
 # without requiring a pre-built application. The real app code is deployed later.
 # ------------------------------------------------------------------------------
 
-# Cache header helper - provides Stale-While-Revalidate values per path
-# Usage in your app: import { getCacheHeaders } from './utils/cache'
 locals {
-  # This helper shows how to implement SWR in your application code
-  cache_helper_docs = <<-HELPER
-/**
- * Get Cache-Control headers for Stale-While-Revalidate pattern
- * 
- * @param {string} path - Request path
- * @returns {object} Cache-Control header value
- * 
- * Examples:
- *   - public, max-age=60, stale-while-revalidate=300
- *     → Cache 60s, serve stale up to 5 min while refreshing in background
- *   
- *   - public, max-age=300, stale-while-revalidate=3600  
- *     → Cache 5 min, serve stale up to 1 hour while refreshing
- *   
- *   - no-store
- *     → Never cache (for private/user-specific pages)
- *   
- *   - public, max-age=0, stale-while-revalidate=86400
- *     → Always serve from cache if available, refresh daily
- */
-function getCacheHeaders(path) {
-  // API routes - never cache
-  if (path.startsWith('/api/')) {
-    return { 'Cache-Control': 'no-store' };
-  }
-  
-  // Health check - short cache, quick refresh
-  if (path === '/api/health') {
-    return { 'Cache-Control': 'public, max-age=5, stale-while-revalidate=30' };
-  }
-  
-  // Homepage - moderate cache with SWR
-  if (path === '/') {
-    return { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' };
-  }
-  
-  // Static-style pages (blog, docs) - longer cache with SWR  
-  if (path.startsWith('/blog/') || path.startsWith('/docs/')) {
-    return { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600' };
-  }
-  
-  // User-specific pages - no cache
-  if (path.startsWith('/profile') || path.startsWith('/dashboard') || path.startsWith('/account')) {
-    return { 'Cache-Control': 'no-store' };
-  }
-  
-  // Default - short cache with moderate SWR
-  return { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=120' };
-}
-HELPER
-
   # Bootstrap Lambda code with SWR support
   bootstrap_code = <<-EOF
 // Stale-While-Revalidate cache helper (copy to your app's utils/cache.js)
