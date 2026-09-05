@@ -335,3 +335,119 @@ terraform output -json > config/infra-outputs.json
 ---
 
 MIT
+
+## Maintaining This Module
+
+The generated interface below is authoritative for requirements, providers, resources, inputs, and outputs. Regenerate with `terraform-docs` **v0.20.0**: `terraform-docs .`. CI fails on drift; keep explanatory prose outside the generated markers.
+
+See the [contribution guide](https://github.com/pomo-studio/.github/blob/main/CONTRIBUTING.md) and [security policy](https://github.com/pomo-studio/.github/blob/main/SECURITY.md). PR validation does not prove a live plan or deployment. Infrastructure plans and applies belong in Terraform Cloud; never provide cloud credentials to untrusted PR code.
+
+<!-- BEGIN_TF_DOCS -->
+## Requirements
+
+| Name | Version |
+|------|---------|
+| <a name="requirement_terraform"></a> [terraform](#requirement\_terraform) | >= 1.5.0 |
+| <a name="requirement_archive"></a> [archive](#requirement\_archive) | >= 2.4, < 3.0 |
+| <a name="requirement_aws"></a> [aws](#requirement\_aws) | >= 5.0, < 7.0 |
+| <a name="requirement_random"></a> [random](#requirement\_random) | >= 3.0, < 4.0 |
+
+## Providers
+
+| Name | Version |
+|------|---------|
+| <a name="provider_archive"></a> [archive](#provider\_archive) | >= 2.4, < 3.0 |
+| <a name="provider_aws.dr"></a> [aws.dr](#provider\_aws.dr) | >= 5.0, < 7.0 |
+| <a name="provider_aws.primary"></a> [aws.primary](#provider\_aws.primary) | >= 5.0, < 7.0 |
+
+## Modules
+
+| Name | Source | Version |
+|------|--------|---------|
+| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | pomo-studio/ssr-cloudfront/aws | = 0.2.0 |
+| <a name="module_cloudfront_support"></a> [cloudfront\_support](#module\_cloudfront\_support) | pomo-studio/ssr-cloudfront-support/aws | = 0.2.0 |
+| <a name="module_dns"></a> [dns](#module\_dns) | pomo-studio/ssr-dns/aws | = 0.2.0 |
+| <a name="module_dynamodb"></a> [dynamodb](#module\_dynamodb) | pomo-studio/dynamodb-global-table/aws | = 1.0.1 |
+| <a name="module_lambda_dr"></a> [lambda\_dr](#module\_lambda\_dr) | pomo-studio/ssr-lambda/aws | = 0.2.0 |
+| <a name="module_lambda_primary"></a> [lambda\_primary](#module\_lambda\_primary) | pomo-studio/ssr-lambda/aws | = 0.2.0 |
+| <a name="module_storage"></a> [storage](#module\_storage) | pomo-studio/ssr-storage/aws | = 0.2.0 |
+
+## Resources
+
+| Name | Type |
+|------|------|
+| [aws_dynamodb_table_item.counter](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/dynamodb_table_item) | resource |
+| [aws_iam_access_key.cicd](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_access_key) | resource |
+| [aws_iam_policy.cicd](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_policy.lambda_dynamodb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_policy.lambda_s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_policy) | resource |
+| [aws_iam_role.lambda_execution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role) | resource |
+| [aws_iam_role_policy_attachment.lambda_basic_execution](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.lambda_dynamodb](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_role_policy_attachment.lambda_s3](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_role_policy_attachment) | resource |
+| [aws_iam_user.cicd](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user) | resource |
+| [aws_iam_user_policy_attachment.cicd](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/iam_user_policy_attachment) | resource |
+| [aws_lambda_function_url.dr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_url) | resource |
+| [aws_lambda_function_url.primary](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_function_url) | resource |
+| [aws_lambda_permission.cloudfront_dr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.cloudfront_dr_dist](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.cloudfront_dr_invoke](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.cloudfront_dr_invoke_dist](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.cloudfront_primary](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.cloudfront_primary_dist](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.cloudfront_primary_invoke](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_lambda_permission.cloudfront_primary_invoke_dist](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/lambda_permission) | resource |
+| [aws_s3_object.bootstrap_dr](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
+| [aws_s3_object.bootstrap_primary](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/s3_object) | resource |
+| [aws_secretsmanager_secret.cicd_credentials](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret) | resource |
+| [aws_secretsmanager_secret_version.cicd_credentials](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/resources/secretsmanager_secret_version) | resource |
+| [archive_file.bootstrap](https://registry.terraform.io/providers/hashicorp/archive/latest/docs/data-sources/file) | data source |
+| [aws_caller_identity.current](https://registry.terraform.io/providers/hashicorp/aws/latest/docs/data-sources/caller_identity) | data source |
+
+## Inputs
+
+| Name | Description | Type | Default | Required |
+|------|-------------|------|---------|:--------:|
+| <a name="input_create_ci_cd_user"></a> [create\_ci\_cd\_user](#input\_create\_ci\_cd\_user) | Create IAM user for CI/CD deployments. Prefer OIDC (set false) over static credentials. | `bool` | `false` | no |
+| <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Base domain name (e.g., example.com). Leave null to use CloudFront domain only. | `string` | `null` | no |
+| <a name="input_dr_region"></a> [dr\_region](#input\_dr\_region) | DR AWS region | `string` | `"us-west-2"` | no |
+| <a name="input_enable_dr"></a> [enable\_dr](#input\_enable\_dr) | Enable DR region deployment | `bool` | `true` | no |
+| <a name="input_enable_dynamo"></a> [enable\_dynamo](#input\_enable\_dynamo) | Deploy DynamoDB global table. Set false if your app has no persistence needs or uses an external database. | `bool` | `true` | no |
+| <a name="input_environment"></a> [environment](#input\_environment) | Environment name (dev, staging, prod) | `string` | `"prod"` | no |
+| <a name="input_lambda_memory_size"></a> [lambda\_memory\_size](#input\_lambda\_memory\_size) | Lambda memory size in MB | `number` | `512` | no |
+| <a name="input_lambda_timeout"></a> [lambda\_timeout](#input\_lambda\_timeout) | Lambda timeout in seconds | `number` | `10` | no |
+| <a name="input_primary_region"></a> [primary\_region](#input\_primary\_region) | Primary AWS region | `string` | `"us-east-1"` | no |
+| <a name="input_project_name"></a> [project\_name](#input\_project\_name) | Project name used for all resources. Must be unique, lowercase alphanumeric with hyphens. | `string` | n/a | yes |
+| <a name="input_route53_managed"></a> [route53\_managed](#input\_route53\_managed) | Whether domain is hosted in Route53 (enables automatic DNS management and validation). Only applies if domain\_name is set. | `bool` | `false` | no |
+| <a name="input_subdomain"></a> [subdomain](#input\_subdomain) | Subdomain for the application (e.g., app, www). Leave null or empty for root domain. | `string` | `null` | no |
+| <a name="input_tags"></a> [tags](#input\_tags) | Additional tags for all resources | `map(string)` | `{}` | no |
+
+## Outputs
+
+| Name | Description |
+|------|-------------|
+| <a name="output_app_config"></a> [app\_config](#output\_app\_config) | Complete configuration for application deployment |
+| <a name="output_application_url"></a> [application\_url](#output\_application\_url) | Application URL |
+| <a name="output_cicd_access_key_id"></a> [cicd\_access\_key\_id](#output\_cicd\_access\_key\_id) | Access Key ID for CI/CD user (retrieve secret from Secrets Manager) |
+| <a name="output_cicd_aws_access_key_id"></a> [cicd\_aws\_access\_key\_id](#output\_cicd\_aws\_access\_key\_id) | AWS access key for CI/CD deployments |
+| <a name="output_cicd_aws_secret_access_key"></a> [cicd\_aws\_secret\_access\_key](#output\_cicd\_aws\_secret\_access\_key) | AWS secret key for CI/CD deployments |
+| <a name="output_cicd_credentials_secret"></a> [cicd\_credentials\_secret](#output\_cicd\_credentials\_secret) | AWS Secrets Manager ARN containing CI/CD credentials |
+| <a name="output_cicd_setup_instructions"></a> [cicd\_setup\_instructions](#output\_cicd\_setup\_instructions) | Instructions for setting up CI/CD credentials |
+| <a name="output_cicd_user_arn"></a> [cicd\_user\_arn](#output\_cicd\_user\_arn) | ARN of the CI/CD IAM user |
+| <a name="output_cicd_user_name"></a> [cicd\_user\_name](#output\_cicd\_user\_name) | Name of the CI/CD IAM user |
+| <a name="output_cloudfront_distribution_id"></a> [cloudfront\_distribution\_id](#output\_cloudfront\_distribution\_id) | CloudFront distribution ID for cache invalidation |
+| <a name="output_cloudfront_domain_name"></a> [cloudfront\_domain\_name](#output\_cloudfront\_domain\_name) | CloudFront domain name |
+| <a name="output_custom_domain_enabled"></a> [custom\_domain\_enabled](#output\_custom\_domain\_enabled) | Whether custom domain is configured |
+| <a name="output_dns_cloudfront_record"></a> [dns\_cloudfront\_record](#output\_dns\_cloudfront\_record) | DNS record to point domain to CloudFront (add this to your DNS provider if route53\_managed = false) |
+| <a name="output_dns_validation_records"></a> [dns\_validation\_records](#output\_dns\_validation\_records) | DNS records for ACM certificate validation (add these to your DNS provider if route53\_managed = false) |
+| <a name="output_dynamodb_table_arn"></a> [dynamodb\_table\_arn](#output\_dynamodb\_table\_arn) | DynamoDB table ARN |
+| <a name="output_dynamodb_table_name"></a> [dynamodb\_table\_name](#output\_dynamodb\_table\_name) | DynamoDB table name |
+| <a name="output_lambda_function_name_dr"></a> [lambda\_function\_name\_dr](#output\_lambda\_function\_name\_dr) | DR region Lambda function name |
+| <a name="output_lambda_function_name_primary"></a> [lambda\_function\_name\_primary](#output\_lambda\_function\_name\_primary) | Primary region Lambda function name |
+| <a name="output_lambda_function_url_dr"></a> [lambda\_function\_url\_dr](#output\_lambda\_function\_url\_dr) | DR Lambda function URL |
+| <a name="output_lambda_function_url_primary"></a> [lambda\_function\_url\_primary](#output\_lambda\_function\_url\_primary) | Primary Lambda function URL |
+| <a name="output_route53_managed"></a> [route53\_managed](#output\_route53\_managed) | Whether domain is managed by Route53 |
+| <a name="output_s3_bucket_deployments_dr"></a> [s3\_bucket\_deployments\_dr](#output\_s3\_bucket\_deployments\_dr) | S3 bucket for Lambda deployments (DR) |
+| <a name="output_s3_bucket_deployments_primary"></a> [s3\_bucket\_deployments\_primary](#output\_s3\_bucket\_deployments\_primary) | S3 bucket for Lambda deployments (primary) |
+| <a name="output_s3_bucket_static"></a> [s3\_bucket\_static](#output\_s3\_bucket\_static) | S3 bucket for static assets |
+<!-- END_TF_DOCS -->
