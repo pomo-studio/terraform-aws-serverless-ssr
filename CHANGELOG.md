@@ -1,11 +1,42 @@
 # Changelog
 
-All notable changes to this project will be documented in this file.
+All notable changes to this module are documented here. The format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) and versions follow [Semantic Versioning](https://semver.org/).
 
-The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
-and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
+## Upgrade notes
 
-## [Unreleased]
+### Migrating from v2.4.8 (or earlier) to v2.4.9+
+
+Starting with v2.4.9, this module was decomposed into registry-published child modules (`ssr-*` and `dynamodb-global-table`) instead of defining all resources inline. When upgrading across that boundary:
+
+- **Always review `terraform plan` carefully** before applying — decomposition can surface as unexpected destroy/recreate of resources if Terraform cannot map old addresses to the new child-module addresses.
+- **Use `moved` blocks** to remap resource addresses where the plan shows replacements that should be in-place moves.
+
+See [PR #4](https://github.com/pomo-studio/terraform-aws-serverless-ssr/pull/4) for the decomposition work.
+
+## [v2.5.2] - 2026-09-05
+
+### Added
+
+- CHANGELOG.md
+
+## [v2.5.1] - 2026-09-05
+
+### Changed
+
+- Child module pins: `ssr-*` `= 0.1.0` → `= 0.2.0` and `dynamodb-global-table` `= 1.0.0` → `= 1.0.1`; module composition now resolves against AWS provider v6
+- Lambda runtime: `nodejs20.x` → `nodejs22.x`
+
+## [v2.5.0] - 2026-09-04
+
+### Changed
+
+- Provider version constraints: AWS `>= 5.0, < 7.0`, `archive` `>= 2.4, < 3.0`, `random` `>= 3.0, < 4.0`
+- Modernized CI/release workflows — replaced deprecated `create-release@v1` action
+
+### Added
+
+- `.tflint.hcl` configuration
+- README badges
 
 ## [2.4.9] - 2026-02-24
 
@@ -36,28 +67,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Important
 - This release introduced internal address moves and required explicit state migration mappings.
 - Consumers should prefer `v2.4.9+` for safe upgrades.
-
-### Changed
-- Began internal decomposition of Lambda resources behind the existing root facade:
-  - root `lambda.tf` now instantiates internal `modules/lambda` for primary and DR Lambda functions
-  - root outputs and permissions now reference module outputs instead of direct root Lambda resources
-- Continued decomposition with DNS/ACM extraction:
-  - root `route53.tf` now delegates DNS and ACM resources to internal `modules/dns`
-  - root CloudFront and DNS outputs now reference module outputs
-- Continued decomposition with storage extraction:
-  - root `s3.tf` now delegates bucket, policy, and replication resources to internal `modules/storage`
-  - root CloudFront, Lambda bootstrap, CI/CD IAM policy, and outputs now reference storage module outputs
-- Continued decomposition with CloudFront support extraction:
-  - root `cloudfront.tf` now delegates OAI/OAC/origin-request-policy/cache-policy to internal `modules/cloudfront-support`
-  - root distribution and storage module wiring now consume cloudfront-support outputs
-- Continued decomposition with CloudFront distribution extraction:
-  - root `cloudfront.tf` now delegates `aws_cloudfront_distribution.main` to internal `modules/cloudfront`
-  - root route53/lambda/iam-cicd/outputs wiring now consume cloudfront module outputs
-- No consumer-facing input/output contract changes.
-
-### Internal
-- Extended `modules/lambda` inputs (`handler`, `runtime`) and aligned lifecycle behavior for deployment package drift tolerance.
-- Updated unit tests to validate Lambda presence through module handles (`module.lambda_primary`, `module.lambda_dr`).
 
 ## [2.4.7] - 2026-02-22
 
@@ -175,6 +184,10 @@ CloudFront Origin Access Control (OAC) with `authorization_type = "AWS_IAM"` was
 - **Automatic failover**: Origin groups with 5xx response detection
 - **Zero-downtime deployments**: Lambda aliases and traffic shifting
 - **Production-ready**: Least-privilege IAM, logging, monitoring
+
+---
+
+> Historical releases are documented in [GitHub Releases](https://github.com/pomo-studio/terraform-aws-serverless-ssr/releases).
 
 [2.4.7]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.6...v2.4.7
 [2.4.9]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.8...v2.4.9

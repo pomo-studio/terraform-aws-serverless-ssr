@@ -5,61 +5,7 @@
 # without requiring a pre-built application. The real app code is deployed later.
 # ------------------------------------------------------------------------------
 
-# Cache header helper - provides Stale-While-Revalidate values per path
-# Usage in your app: import { getCacheHeaders } from './utils/cache'
 locals {
-  # This helper shows how to implement SWR in your application code
-  cache_helper_docs = <<-HELPER
-/**
- * Get Cache-Control headers for Stale-While-Revalidate pattern
- * 
- * @param {string} path - Request path
- * @returns {object} Cache-Control header value
- * 
- * Examples:
- *   - public, max-age=60, stale-while-revalidate=300
- *     → Cache 60s, serve stale up to 5 min while refreshing in background
- *   
- *   - public, max-age=300, stale-while-revalidate=3600  
- *     → Cache 5 min, serve stale up to 1 hour while refreshing
- *   
- *   - no-store
- *     → Never cache (for private/user-specific pages)
- *   
- *   - public, max-age=0, stale-while-revalidate=86400
- *     → Always serve from cache if available, refresh daily
- */
-function getCacheHeaders(path) {
-  // API routes - never cache
-  if (path.startsWith('/api/')) {
-    return { 'Cache-Control': 'no-store' };
-  }
-  
-  // Health check - short cache, quick refresh
-  if (path === '/api/health') {
-    return { 'Cache-Control': 'public, max-age=5, stale-while-revalidate=30' };
-  }
-  
-  // Homepage - moderate cache with SWR
-  if (path === '/') {
-    return { 'Cache-Control': 'public, max-age=60, stale-while-revalidate=300' };
-  }
-  
-  // Static-style pages (blog, docs) - longer cache with SWR  
-  if (path.startsWith('/blog/') || path.startsWith('/docs/')) {
-    return { 'Cache-Control': 'public, max-age=300, stale-while-revalidate=3600' };
-  }
-  
-  // User-specific pages - no cache
-  if (path.startsWith('/profile') || path.startsWith('/dashboard') || path.startsWith('/account')) {
-    return { 'Cache-Control': 'no-store' };
-  }
-  
-  // Default - short cache with moderate SWR
-  return { 'Cache-Control': 'public, max-age=30, stale-while-revalidate=120' };
-}
-HELPER
-
   # Bootstrap Lambda code with SWR support
   bootstrap_code = <<-EOF
 // Stale-While-Revalidate cache helper (copy to your app's utils/cache.js)
@@ -191,7 +137,8 @@ resource "aws_s3_object" "bootstrap_dr" {
 }
 
 module "lambda_primary" {
-  source = "./modules/lambda"
+  source  = "pomo-studio/ssr-lambda/aws"
+  version = "= 0.2.0"
 
   providers = {
     aws = aws.primary
@@ -202,7 +149,7 @@ module "lambda_primary" {
   create_role           = false
   role_arn              = aws_iam_role.lambda_execution.arn
   handler               = "index.handler"
-  runtime               = "nodejs20.x"
+  runtime               = "nodejs22.x"
   memory_size           = var.lambda_memory_size
   timeout               = var.lambda_timeout
   s3_bucket             = module.storage.lambda_deployments_primary_id
@@ -214,8 +161,9 @@ module "lambda_primary" {
 }
 
 module "lambda_dr" {
-  count  = var.enable_dr ? 1 : 0
-  source = "./modules/lambda"
+  count   = var.enable_dr ? 1 : 0
+  source  = "pomo-studio/ssr-lambda/aws"
+  version = "= 0.2.0"
 
   providers = {
     aws = aws.dr
@@ -226,7 +174,7 @@ module "lambda_dr" {
   create_role           = false
   role_arn              = aws_iam_role.lambda_execution.arn
   handler               = "index.handler"
-  runtime               = "nodejs20.x"
+  runtime               = "nodejs22.x"
   memory_size           = var.lambda_memory_size
   timeout               = var.lambda_timeout
   s3_bucket             = module.storage.lambda_deployments_dr_id
@@ -250,7 +198,7 @@ locals {
       PROJECT_NAME   = var.project_name
       # ORIGIN_SECRET removed in v2.4.1 - AWS_IAM authentication replaces X-Origin-Secret header validation
     },
-    var.enable_dynamo ? { DYNAMODB_TABLE = aws_dynamodb_table.visits_primary[0].name } : {}
+    var.enable_dynamo ? { DYNAMODB_TABLE = module.dynamodb[0].table_name_primary } : {}
   )
 }
 
@@ -297,8 +245,8 @@ resource "aws_iam_policy" "lambda_dynamodb" {
           "dynamodb:Scan"
         ]
         Resource = [
-          aws_dynamodb_table.visits_primary[0].arn,
-          "${aws_dynamodb_table.visits_primary[0].arn}/*"
+          module.dynamodb[0].table_arn_primary,
+          "${module.dynamodb[0].table_arn_primary}/*"
         ]
       }
     ]

@@ -1,5 +1,8 @@
 # terraform-aws-serverless-ssr
 
+[![Terraform Validation](https://github.com/pomo-studio/terraform-aws-serverless-ssr/actions/workflows/terraform.yml/badge.svg)](https://github.com/pomo-studio/terraform-aws-serverless-ssr/actions/workflows/terraform.yml)
+[![Terraform Registry](https://img.shields.io/badge/terraform-registry-844FBA?logo=terraform)](https://registry.terraform.io/modules/pomo-studio/serverless-ssr/aws)
+
 Terraform module for deploying SSR applications (Nuxt, Next.js, Nitro) on AWS Lambda with multi-region failover.
 
 - Multi-region Lambda (us-east-1 + us-west-2) with CloudFront automatic failover — no Route 53 health checks needed
@@ -8,7 +11,7 @@ Terraform module for deploying SSR applications (Nuxt, Next.js, Nitro) on AWS La
 - Custom domain + ACM certificate fully automated for Route 53-managed zones
 - Optional DynamoDB global table for visit/session data, replicated to DR automatically
 
-**Registry**: `pomo-studio/serverless-ssr/aws` | **Live example**: [ssr.pomo.dev](https://ssr.pomo.dev)
+**Registry**: `pomo-studio/serverless-ssr/aws` | **Live example**: [ssr.pomo.dev](https://ssr.pomo.dev) | [Changelog](CHANGELOG.md)
 
 ---
 
@@ -297,7 +300,7 @@ terraform output -json > config/infra-outputs.json
 | Tool | Version |
 |---|---|
 | Terraform | `>= 1.5.0` |
-| AWS provider | `~> 5.0` |
+| AWS provider | `>= 5.0, < 7.0` |
 
 ---
 

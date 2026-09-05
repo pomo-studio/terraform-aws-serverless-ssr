@@ -15,8 +15,8 @@ locals {
       "dynamodb:DescribeTable"
     ]
     Resource = [
-      aws_dynamodb_table.visits_primary[0].arn,
-      "${aws_dynamodb_table.visits_primary[0].arn}/*"
+      module.dynamodb[0].table_arn_primary,
+      "${module.dynamodb[0].table_arn_primary}/*"
     ]
   }] : []
 }
@@ -129,8 +129,6 @@ resource "aws_iam_user_policy_attachment" "cicd" {
 }
 
 # Create access key for the CI/CD user
-# NOTE: This creates a long-term credential. For production, consider using
-# GitHub OIDC federation instead (see iam-oidc.tf for alternative)
 resource "aws_iam_access_key" "cicd" {
   count    = var.create_ci_cd_user ? 1 : 0
   provider = aws.primary

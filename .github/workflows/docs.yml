@@ -15,6 +15,10 @@ on:
       - '.github/workflows/docs.yml'
   workflow_dispatch:
 
+concurrency:
+  group: docs-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   # Check markdown links
   markdown-link-check:
