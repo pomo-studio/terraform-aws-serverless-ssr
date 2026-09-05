@@ -13,6 +13,13 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 
 See [PR #4](https://github.com/pomo-studio/terraform-aws-serverless-ssr/pull/4) for the decomposition work.
 
+## [Unreleased]
+
+### Fixed
+
+- Bootstrap Lambda JavaScript failed to parse with `SyntaxError: Unexpected token 'var'` because escaped Terraform interpolation emitted literal `${var.project_name}` expressions. Interpolate the validated project name into the HTML title and heading at Terraform render time instead; the existing lowercase alphanumeric/hyphen validation keeps it safe in both JavaScript and HTML.
+- Added a dependency-free local regression test (`node --test tests/bootstrap.test.cjs`) that extracts and renders the actual bootstrap heredoc, parses it, and invokes the HTML and health handlers without Terraform initialization or infrastructure access.
+
 ## [v2.5.2] - 2026-09-05
 
 ### Added
