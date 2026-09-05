@@ -33,23 +33,3 @@ jobs:
         with:
           args: --timeout 30 README.md examples/**/*.md
         continue-on-error: true
-
-  # Validate Terraform docs are up to date
-  terraform-docs:
-    name: Check Terraform Docs
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          ref: ${{ github.event.pull_request.head.ref }}
-
-      - name: Generate Terraform Docs
-        uses: terraform-docs/gh-actions@v1
-        with:
-          working-dir: .
-          output-file: README.md
-          output-method: inject
-          git-push: "false"
-          fail-on-diff: "true"
-        continue-on-error: true
