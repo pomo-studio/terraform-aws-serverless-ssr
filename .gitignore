@@ -30,3 +30,7 @@ Thumbs.db
 *.tmp
 *.temp
 .cache/
+
+# Upgrade tooling tests
+__pycache__/
+*.pyc

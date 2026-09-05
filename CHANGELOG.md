@@ -38,6 +38,36 @@ See [PR #4](https://github.com/pomo-studio/terraform-aws-serverless-ssr/pull/4) 
 - `.tflint.hcl` configuration
 - README badges
 
+## [2.4.9] - 2026-02-24
+
+### Fixed
+- Added comprehensive `moved` blocks in `moved.tf` to map pre-decomposition root resource addresses to internal submodule addresses.
+- Prevented destructive create/destroy churn when upgrading from pre-decomposition versions.
+
+### Why This Release Exists
+- `v2.4.8` shipped decomposition refactors without complete state-address migration mappings.
+- Existing consumers could see large replacement plans (including site-critical resources) during upgrade.
+- `v2.4.9` is the migration safety patch and should be the minimum target for decomposition upgrades.
+
+### Upgrade Notes
+- Do not stop on `v2.4.8`.
+- Upgrade directly to `v2.4.9` (or later) and review plan output for zero unexpected destroys before apply.
+
+## [2.4.8] - 2026-02-24
+
+### Changed
+- Refactored module internals into composed submodules while keeping the root input/output facade:
+  - `modules/lambda`
+  - `modules/dns`
+  - `modules/storage`
+  - `modules/cloudfront-support`
+  - `modules/cloudfront`
+- Rewired root resources/outputs to consume submodule outputs.
+
+### Important
+- This release introduced internal address moves and required explicit state migration mappings.
+- Consumers should prefer `v2.4.9+` for safe upgrades.
+
 ## [2.4.7] - 2026-02-22
 
 ### Fixed
@@ -160,6 +190,8 @@ CloudFront Origin Access Control (OAC) with `authorization_type = "AWS_IAM"` was
 > Historical releases are documented in [GitHub Releases](https://github.com/pomo-studio/terraform-aws-serverless-ssr/releases).
 
 [2.4.7]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.6...v2.4.7
+[2.4.9]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.8...v2.4.9
+[2.4.8]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.7...v2.4.8
 [2.4.6]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.4.5...v2.4.6
 [2.4.0]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.3.2...v2.4.0
 [2.3.2]: https://github.com/pomo-studio/terraform-aws-serverless-ssr/compare/v2.3.1...v2.3.2
