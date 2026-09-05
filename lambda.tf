@@ -138,7 +138,7 @@ resource "aws_s3_object" "bootstrap_dr" {
 
 module "lambda_primary" {
   source  = "pomo-studio/ssr-lambda/aws"
-  version = "= 0.1.0"
+  version = "= 0.2.0"
 
   providers = {
     aws = aws.primary
@@ -149,7 +149,7 @@ module "lambda_primary" {
   create_role           = false
   role_arn              = aws_iam_role.lambda_execution.arn
   handler               = "index.handler"
-  runtime               = "nodejs20.x"
+  runtime               = "nodejs22.x"
   memory_size           = var.lambda_memory_size
   timeout               = var.lambda_timeout
   s3_bucket             = module.storage.lambda_deployments_primary_id
@@ -163,7 +163,7 @@ module "lambda_primary" {
 module "lambda_dr" {
   count   = var.enable_dr ? 1 : 0
   source  = "pomo-studio/ssr-lambda/aws"
-  version = "= 0.1.0"
+  version = "= 0.2.0"
 
   providers = {
     aws = aws.dr
@@ -174,7 +174,7 @@ module "lambda_dr" {
   create_role           = false
   role_arn              = aws_iam_role.lambda_execution.arn
   handler               = "index.handler"
-  runtime               = "nodejs20.x"
+  runtime               = "nodejs22.x"
   memory_size           = var.lambda_memory_size
   timeout               = var.lambda_timeout
   s3_bucket             = module.storage.lambda_deployments_dr_id
