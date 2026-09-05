@@ -11,7 +11,7 @@ Terraform module for deploying SSR applications (Nuxt, Next.js, Nitro) on AWS La
 - Custom domain + ACM certificate fully automated for Route 53-managed zones
 - Optional DynamoDB global table for visit/session data, replicated to DR automatically
 
-**Registry**: `pomo-studio/serverless-ssr/aws` | **Live example**: [ssr.pomo.dev](https://ssr.pomo.dev)
+**Registry**: `pomo-studio/serverless-ssr/aws` | **Live example**: [ssr.pomo.dev](https://ssr.pomo.dev) | [Changelog](CHANGELOG.md)
 
 ---
 
