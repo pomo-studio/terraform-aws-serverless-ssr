@@ -221,6 +221,25 @@ run "rejects_certificate_outside_us_east_1" {
   expect_failures = [var.certificate_arn]
 }
 
+run "static_root_path_patterns_default" {
+  command = plan
+
+  variables {
+    project_name = "test-app"
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  # Existing callers must see the previous single behaviour unchanged.
+  assert {
+    condition     = length(var.static_root_path_patterns) == 1 && var.static_root_path_patterns[0] == "/favicon.ico"
+    error_message = "Default should preserve the previous single favicon behaviour"
+  }
+}
+
 # Test 4: Validation failures
 run "invalid_name_too_short" {
   command = plan

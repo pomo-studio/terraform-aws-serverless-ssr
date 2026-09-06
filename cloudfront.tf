@@ -11,7 +11,7 @@ module "cloudfront_support" {
 
 module "cloudfront" {
   source  = "pomo-studio/ssr-cloudfront/aws"
-  version = "= 0.2.0"
+  version = "= 0.3.0"
 
   providers = {
     aws = aws.primary
@@ -20,6 +20,7 @@ module "cloudfront" {
   app_name                               = local.app_name
   enable_custom_domain                   = local.enable_custom_domain
   full_domain                            = local.full_domain
+  static_root_path_patterns              = var.static_root_path_patterns
   enable_dr                              = var.enable_dr
   primary_lambda_function_url            = aws_lambda_function_url.primary.function_url
   dr_lambda_function_url                 = var.enable_dr ? aws_lambda_function_url.dr[0].function_url : null
