@@ -1,6 +1,6 @@
 module "dns" {
   source  = "pomo-studio/ssr-dns/aws"
-  version = "= 0.2.0"
+  version = "= 0.3.0"
 
   providers = {
     aws = aws.primary
@@ -10,6 +10,7 @@ module "dns" {
   enable_route53            = local.enable_route53
   domain_name               = var.domain_name
   full_domain               = local.full_domain
+  certificate_arn           = var.certificate_arn
   app_name                  = local.app_name
   common_tags               = local.common_tags
   cloudfront_domain_name    = module.cloudfront.domain_name

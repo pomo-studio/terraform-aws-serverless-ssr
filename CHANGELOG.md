@@ -13,6 +13,16 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 
 See [PR #4](https://github.com/pomo-studio/terraform-aws-serverless-ssr/pull/4) for the decomposition work.
 
+## [v2.6.0] - 2026-09-06
+
+### Added
+
+- `certificate_arn` input — attach an existing ACM certificate instead of issuing one. Skips the certificate request, validation record, and validation wait. Enables reusing a shared or wildcard certificate, and standing up a site whose domain is not yet delegated to Route 53.
+
+### Changed
+
+- Child module pin: `ssr-dns` `= 0.2.0` → `= 0.3.0`. This also advances past the docs-only `v0.2.1` and `v0.2.2`, and picks up the AWS provider constraint widening (`~> 5.0` → `>= 5.0, < 7.0`) that shipped in `ssr-dns` v0.2.0.
+
 ## [v2.5.2] - 2026-09-05
 
 ### Added
