@@ -11,7 +11,7 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 - **Always review `terraform plan` carefully** before applying — decomposition can surface as unexpected destroy/recreate of resources if Terraform cannot map old addresses to the new child-module addresses.
 - **Use `moved` blocks** to remap resource addresses where the plan shows replacements that should be in-place moves.
 
-See [PR #4](https://github.com/pomo-studio/terraform-aws-serverless-ssr/pull/4) for the decomposition work.
+The decomposition landed in [`90caf19`](https://github.com/pomo-studio/terraform-aws-serverless-ssr/commit/90caf19f6928930266bfb4f763fd318b30395a08) (2026-02-26), which removed the local `modules/` submodules and pointed the root module at the registry-published `ssr-*` children.
 
 ## [v2.7.0] - 2026-09-06
 
