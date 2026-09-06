@@ -102,6 +102,43 @@ module "ssr" {
 
 Terraform outputs the CNAME and ACM validation records to add at your registrar. See [`dns_validation_records`](#outputs) and [`dns_cloudfront_record`](#outputs).
 
+### Custom domain (existing certificate)
+
+Set `certificate_arn` to attach a certificate you already have instead of letting the
+module issue one:
+
+```hcl
+module "ssr" {
+  source  = "pomo-studio/serverless-ssr/aws"
+  version = "~> 2.6"
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  project_name    = "my-app"
+  domain_name     = "example.com"
+  subdomain       = "www"
+  route53_managed = true
+  certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/abc-123"
+}
+```
+
+The module then skips the certificate request, the validation record, and the validation
+wait — the certificate must already be issued. The alias record is still managed as usual.
+
+Two cases this serves:
+
+- **A shared or wildcard certificate** issued elsewhere, such as one a core infrastructure
+  workspace manages for the whole domain.
+- **A domain not yet delegated to Route 53.** The module's own validation record would be
+  written to a zone nothing queries, so validation could never succeed and the apply would
+  block until it timed out. Supplying an already-validated certificate sidesteps that.
+
+The certificate must be in `us-east-1` — CloudFront accepts no other region, and the
+variable validates it.
+
 ---
 
 ### AWS provider configuration
@@ -227,6 +264,7 @@ The `/favicon.ico` path has its own S3 behavior and is the only `public/` except
 | `domain_name` | `string` | `null` | Base domain (e.g. `example.com`). Null = use CloudFront URL. |
 | `subdomain` | `string` | `null` | Subdomain (e.g. `app`). Null = root domain. |
 | `route53_managed` | `bool` | `false` | Auto-manage DNS and ACM validation in Route 53. |
+| `certificate_arn` | `string` | `null` | Attach an existing ACM certificate instead of issuing one. Must be in `us-east-1`. |
 | `primary_region` | `string` | `us-east-1` | Primary AWS region. |
 | `dr_region` | `string` | `us-west-2` | DR AWS region. |
 | `enable_dr` | `bool` | `true` | Deploy DR Lambda and S3. Disable for dev/staging to reduce cost. |
