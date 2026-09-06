@@ -316,6 +316,7 @@ terraform output -json > config/infra-outputs.json
 ## Documentation
 
 - [Getting Started](docs/GETTING_STARTED.md) — first deployment walkthrough
+- [Stewardship & Trust](STEWARDSHIP.md) — what we commit to and what we don't
 - [Architecture](docs/ARCHITECTURE.md) — CloudFront origin groups, failover, cost breakdown
 - [Caching](docs/CACHING.md) — Stale-While-Revalidate configuration and tuning
 - [Domain Setup](docs/DOMAIN_SETUP.md) — migrating a domain to Route 53
