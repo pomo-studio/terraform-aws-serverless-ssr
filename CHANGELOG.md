@@ -13,6 +13,16 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 
 See [PR #4](https://github.com/pomo-studio/terraform-aws-serverless-ssr/pull/4) for the decomposition work.
 
+## [v2.7.0] - 2026-09-06
+
+### Added
+
+- `static_root_path_patterns` — root paths served from the static assets origin rather than the SSR Lambda. Previously only `/favicon.ico` was routed, so `robots.txt`, `sitemap.xml` and `apple-touch-icon.png` were uploaded to S3 but returned 404. Defaults to `["/favicon.ico"]`, preserving existing behaviour.
+
+### Changed
+
+- Child module pin: `ssr-cloudfront` `= 0.2.0` → `= 0.3.0`
+
 ## [v2.6.0] - 2026-09-06
 
 ### Added

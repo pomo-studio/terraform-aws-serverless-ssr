@@ -265,6 +265,7 @@ The `/favicon.ico` path has its own S3 behavior and is the only `public/` except
 | `subdomain` | `string` | `null` | Subdomain (e.g. `app`). Null = root domain. |
 | `route53_managed` | `bool` | `false` | Auto-manage DNS and ACM validation in Route 53. |
 | `certificate_arn` | `string` | `null` | Attach an existing ACM certificate instead of issuing one. Must be in `us-east-1`. |
+| `static_root_path_patterns` | `list(string)` | `["/favicon.ico"]` | Root paths served from S3 rather than the SSR Lambda, e.g. `robots.txt`. Wildcards allowed. |
 | `primary_region` | `string` | `us-east-1` | Primary AWS region. |
 | `dr_region` | `string` | `us-west-2` | DR AWS region. |
 | `enable_dr` | `bool` | `true` | Deploy DR Lambda and S3. Disable for dev/staging to reduce cost. |
