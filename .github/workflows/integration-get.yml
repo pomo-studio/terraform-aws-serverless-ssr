@@ -1,14 +1,10 @@
-name: Integration GET Gate
+name: Existing Endpoint Smoke (Not Candidate Evidence)
 
 on:
-  pull_request:
-    paths:
-      - '*.tf'
-      - 'tests/integration.sh'
-      - 'README.md'
-      - 'docs/**'
-      - '.github/workflows/integration-get.yml'
   workflow_dispatch:
+
+permissions:
+  contents: read
 
 concurrency:
   group: integration-get-${{ github.ref }}
@@ -16,7 +12,7 @@ concurrency:
 
 jobs:
   integration-get:
-    name: CloudFront -> Lambda GET
+    name: Existing CloudFront endpoint GET only
     runs-on: ubuntu-latest
     steps:
       - name: Checkout

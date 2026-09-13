@@ -1,4 +1,8 @@
-.PHONY: test test-integration fmt validate
+.PHONY: test test-integration test-upgrade-gate fmt validate
+
+## Credential-free tests of plan policy and TFC plan-only orchestration
+test-upgrade-gate:
+	python3 -m unittest discover -s tests -p 'test_upgrade*.py' -v
 
 ## Run all unit tests
 test:
