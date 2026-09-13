@@ -11,7 +11,33 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 - **Always review `terraform plan` carefully** before applying — decomposition can surface as unexpected destroy/recreate of resources if Terraform cannot map old addresses to the new child-module addresses.
 - **Use `moved` blocks** to remap resource addresses where the plan shows replacements that should be in-place moves.
 
-See [PR #4](https://github.com/pomo-studio/terraform-aws-serverless-ssr/pull/4) for the decomposition work.
+The decomposition landed in [`90caf19`](https://github.com/pomo-studio/terraform-aws-serverless-ssr/commit/90caf19f6928930266bfb4f763fd318b30395a08) (2026-02-26), which removed the local `modules/` submodules and pointed the root module at the registry-published `ssr-*` children.
+
+## [v2.7.1] - 2026-09-12
+
+### Added
+
+- terraform-docs-generated interface documentation in README (Requirements/Providers/Inputs/Outputs) with a CI drift check.
+
+## [v2.7.0] - 2026-09-06
+
+### Added
+
+- `static_root_path_patterns` — root paths served from the static assets origin rather than the SSR Lambda. Previously only `/favicon.ico` was routed, so `robots.txt`, `sitemap.xml` and `apple-touch-icon.png` were uploaded to S3 but returned 404. Defaults to `["/favicon.ico"]`, preserving existing behaviour.
+
+### Changed
+
+- Child module pin: `ssr-cloudfront` `= 0.2.0` → `= 0.3.0`
+
+## [v2.6.0] - 2026-09-06
+
+### Added
+
+- `certificate_arn` input — attach an existing ACM certificate instead of issuing one. Skips the certificate request, validation record, and validation wait. Enables reusing a shared or wildcard certificate, and standing up a site whose domain is not yet delegated to Route 53.
+
+### Changed
+
+- Child module pin: `ssr-dns` `= 0.2.0` → `= 0.3.0`. This also advances past the docs-only `v0.2.1` and `v0.2.2`, and picks up the AWS provider constraint widening (`~> 5.0` → `>= 5.0, < 7.0`) that shipped in `ssr-dns` v0.2.0.
 
 ## [v2.5.2] - 2026-09-05
 

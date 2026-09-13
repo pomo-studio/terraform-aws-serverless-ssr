@@ -176,6 +176,70 @@ run "custom_domain_configuration" {
   }
 }
 
+run "custom_domain_with_supplied_certificate" {
+  command = plan
+
+  variables {
+    project_name    = "test-app"
+    domain_name     = "example.com"
+    subdomain       = "www"
+    route53_managed = true
+    certificate_arn = "arn:aws:acm:us-east-1:123456789012:certificate/11111111-2222-3333-4444-555555555555"
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  # The supplied certificate should be attached rather than a new one issued.
+  assert {
+    condition     = module.dns.certificate_arn == "arn:aws:acm:us-east-1:123456789012:certificate/11111111-2222-3333-4444-555555555555"
+    error_message = "Should attach the supplied certificate ARN"
+  }
+
+  assert {
+    condition     = length(module.dns.dns_validation_records) == 0
+    error_message = "Should not emit validation records when a certificate is supplied"
+  }
+}
+
+run "rejects_certificate_outside_us_east_1" {
+  command = plan
+
+  variables {
+    project_name    = "test-app"
+    domain_name     = "example.com"
+    certificate_arn = "arn:aws:acm:eu-west-1:123456789012:certificate/11111111-2222-3333-4444-555555555555"
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  expect_failures = [var.certificate_arn]
+}
+
+run "static_root_path_patterns_default" {
+  command = plan
+
+  variables {
+    project_name = "test-app"
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  # Existing callers must see the previous single behaviour unchanged.
+  assert {
+    condition     = length(var.static_root_path_patterns) == 1 && var.static_root_path_patterns[0] == "/favicon.ico"
+    error_message = "Default should preserve the previous single favicon behaviour"
+  }
+}
+
 # Test 4: Validation failures
 run "invalid_name_too_short" {
   command = plan

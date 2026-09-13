@@ -42,6 +42,23 @@ variable "route53_managed" {
   default     = false
 }
 
+variable "static_root_path_patterns" {
+  description = "Path patterns served from the static assets origin instead of the SSR Lambda. Root-level files such as /favicon.ico, /robots.txt or /apple-touch-icon.png are uploaded with the static assets but would otherwise resolve against the Lambda and 404. Wildcards are allowed, e.g. /favicon*."
+  type        = list(string)
+  default     = ["/favicon.ico"]
+}
+
+variable "certificate_arn" {
+  description = "ARN of an existing ACM certificate covering the site domain. When set, the module attaches this certificate instead of requesting and validating its own. Must be in us-east-1 for CloudFront. Only applies if domain_name is set."
+  type        = string
+  default     = null
+
+  validation {
+    condition     = var.certificate_arn == null || can(regex("^arn:aws[a-z-]*:acm:us-east-1:[0-9]{12}:certificate/.+$", var.certificate_arn))
+    error_message = "certificate_arn must be an ACM certificate ARN in us-east-1 (CloudFront only accepts certificates from that region)."
+  }
+}
+
 # Optional Variables
 # ------------------------------------------------------------------------------
 
