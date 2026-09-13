@@ -138,7 +138,7 @@ resource "aws_s3_object" "bootstrap_dr" {
 
 module "lambda_primary" {
   source  = "pomo-studio/ssr-lambda/aws"
-  version = "= 0.2.0"
+  version = "0.2.3"
 
   providers = {
     aws = aws.primary
@@ -163,7 +163,7 @@ module "lambda_primary" {
 module "lambda_dr" {
   count   = var.enable_dr ? 1 : 0
   source  = "pomo-studio/ssr-lambda/aws"
-  version = "= 0.2.0"
+  version = "0.2.3"
 
   providers = {
     aws = aws.dr
