@@ -1,6 +1,6 @@
 module "cloudfront_support" {
   source  = "pomo-studio/ssr-cloudfront-support/aws"
-  version = "= 0.2.0"
+  version = "0.2.4"
 
   providers = {
     aws = aws.primary
