@@ -49,6 +49,24 @@ substitute for your own architecture and security review.
 - There is no hidden control plane or remote dependency outside the Terraform
   Registry and your own AWS account.
 
+### 6. Dependency maintenance
+
+- Terraform providers and GitHub Actions are reviewed on a weekly cadence
+  through automated pull requests.
+- Minor and patch updates are grouped and merged once the required checks pass.
+  Terraform major versions are excluded from automatic updates and reviewed
+  deliberately.
+- A retired provider or runtime therefore reaches you as a release, not a
+  surprise.
+
+### 7. Documentation integrity
+
+- The generated interface (requirements, providers, resources, inputs, and
+  outputs) is produced from the code and verified in CI. A change that leaves it
+  stale fails the build.
+- READMEs follow a written standard covering structure, required sections, and
+  prose, and are checked on every change.
+
 ## What we do not commit to
 
 - **Production guarantee.** Every serious deployment needs its own threat model,
@@ -63,6 +81,8 @@ substitute for your own architecture and security review.
 ## How we test
 
 - Terraform validation and linting run on every pull request.
+- The generated interface is verified and the README structure and prose are
+  checked on every change.
 - A dependency-free local regression test (`node --test tests/bootstrap.test.cjs`)
   extracts and renders the actual bootstrap code without AWS credentials.
 - Integration tests against a real deployment live in `tests/integration.sh`;
