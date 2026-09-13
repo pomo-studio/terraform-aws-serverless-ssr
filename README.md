@@ -185,8 +185,8 @@ provider "aws" {
 | <a name="module_cloudfront_support"></a> [cloudfront\_support](#module\_cloudfront\_support) | pomo-studio/ssr-cloudfront-support/aws | = 0.2.0 |
 | <a name="module_dns"></a> [dns](#module\_dns) | pomo-studio/ssr-dns/aws | = 0.3.0 |
 | <a name="module_dynamodb"></a> [dynamodb](#module\_dynamodb) | pomo-studio/dynamodb-global-table/aws | = 1.0.1 |
-| <a name="module_lambda_dr"></a> [lambda\_dr](#module\_lambda\_dr) | pomo-studio/ssr-lambda/aws | = 0.2.0 |
-| <a name="module_lambda_primary"></a> [lambda\_primary](#module\_lambda\_primary) | pomo-studio/ssr-lambda/aws | = 0.2.0 |
+| <a name="module_lambda_dr"></a> [lambda\_dr](#module\_lambda\_dr) | pomo-studio/ssr-lambda/aws | 0.2.3 |
+| <a name="module_lambda_primary"></a> [lambda\_primary](#module\_lambda\_primary) | pomo-studio/ssr-lambda/aws | 0.2.3 |
 | <a name="module_storage"></a> [storage](#module\_storage) | pomo-studio/ssr-storage/aws | = 0.2.0 |
 
 ## Resources
