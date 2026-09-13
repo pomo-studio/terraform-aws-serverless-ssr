@@ -13,6 +13,12 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 
 The decomposition landed in [`90caf19`](https://github.com/pomo-studio/terraform-aws-serverless-ssr/commit/90caf19f6928930266bfb4f763fd318b30395a08) (2026-02-26), which removed the local `modules/` submodules and pointed the root module at the registry-published `ssr-*` children.
 
+## [v2.7.1] - 2026-09-12
+
+### Added
+
+- terraform-docs-generated interface documentation in README (Requirements/Providers/Inputs/Outputs) with a CI drift check.
+
 ## [v2.7.0] - 2026-09-06
 
 ### Added
