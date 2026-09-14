@@ -171,7 +171,6 @@ Scope boundary:
 
 - This module is for SSR web delivery.
 - API POST workflows should live in dedicated API modules (for example AppSync/API Gateway), not in SSR routing behavior.
-- See `docs/ROADMAP.md` for boundary and backlog notes.
 
 Internal note:
 

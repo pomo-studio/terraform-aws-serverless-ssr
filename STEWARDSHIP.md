@@ -19,15 +19,14 @@ substitute for your own architecture and security review.
 - We label known limitations: DR failover is for eligible SSR/static requests,
   `/api/*` POST routes bypass origin groups, and authentication/API concerns
   belong in separate modules.
-- We keep [ROADMAP.md](docs/ROADMAP.md) current with module boundaries and the
-  backlog.
+- We state module boundaries in the README and track planned work as issues.
 
 ### 2. Semantic versioning and changelogs
 
 - Versions follow [Semantic Versioning](https://semver.org/).
 - Every release is recorded in [CHANGELOG.md](CHANGELOG.md).
-- Breaking changes — including new required inputs, removed outputs, or risky
-  upgrades — get explicit migration notes.
+- Breaking changes get explicit migration notes: new required inputs, removed
+  outputs, or risky upgrades.
 
 ### 3. Security by default
 
