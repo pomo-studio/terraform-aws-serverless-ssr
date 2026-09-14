@@ -15,6 +15,7 @@ This module requires your domain to be managed by AWS Route 53. This guide walks
 If your domain is already in Route 53, you're all set! Skip to [deploying the module](getting-started.md).
 
 **Verify:**
+
 ```bash
 aws route53 list-hosted-zones --query 'HostedZones[*].[Name,Id]' --output table
 ```
@@ -41,6 +42,7 @@ aws route53 create-hosted-zone \
 Before changing nameservers, copy all existing DNS records to Route 53 to avoid downtime.
 
 **Check current DNS records:**
+
 ```bash
 # A records
 dig yourdomain.com A +short
@@ -61,6 +63,7 @@ dig subdomain.yourdomain.com CNAME +short
 **Import records to Route 53:**
 
 Create a file `dns-records.json`:
+
 ```json
 {
   "Changes": [
@@ -91,6 +94,7 @@ Create a file `dns-records.json`:
 ```
 
 Apply the records:
+
 ```bash
 aws route53 change-resource-record-sets \
   --hosted-zone-id /hostedzone/YOUR_ZONE_ID \
@@ -98,6 +102,7 @@ aws route53 change-resource-record-sets \
 ```
 
 **Important records to migrate:**
+
 - ✅ A/AAAA records (website IPs)
 - ✅ MX records (email)
 - ✅ TXT records (SPF, DKIM, domain verification)
@@ -108,6 +113,7 @@ aws route53 change-resource-record-sets \
 Update your domain's nameservers to point to AWS Route 53.
 
 **AWS Route 53 nameservers** (from Step 1 output):
+
 ```
 ns-####.awsdns-##.com
 ns-####.awsdns-##.net
@@ -115,9 +121,10 @@ ns-####.awsdns-##.org
 ns-####.awsdns-##.co.uk
 ```
 
-#### Common Registrars:
+#### Common Registrars
 
 **Google Domains / Squarespace:**
+
 1. Go to domains.squarespace.com
 2. Select your domain
 3. DNS Settings → Nameservers
@@ -126,6 +133,7 @@ ns-####.awsdns-##.co.uk
 6. Save changes
 
 **GoDaddy:**
+
 1. Go to your domain settings
 2. DNS Management → Nameservers
 3. Change to "Custom"
@@ -133,12 +141,14 @@ ns-####.awsdns-##.co.uk
 5. Save
 
 **Namecheap:**
+
 1. Domain List → Manage
 2. Nameservers → Custom DNS
 3. Enter AWS nameservers
 4. Save
 
 **Cloudflare:**
+
 1. Remove domain from Cloudflare first
 2. Go to your registrar
 3. Update nameservers to AWS
@@ -148,6 +158,7 @@ ns-####.awsdns-##.co.uk
 DNS changes can take 5-60 minutes (occasionally up to 48 hours).
 
 **Check propagation:**
+
 ```bash
 # Check if new nameservers are visible
 dig yourdomain.com NS +short
@@ -162,6 +173,7 @@ dig @8.8.8.8 yourdomain.com NS +short
 ```
 
 **Test DNS resolution:**
+
 ```bash
 # Verify A records work
 dig yourdomain.com A +short
@@ -178,6 +190,7 @@ If your domain has DNSSEC enabled, you must disable it when changing nameservers
 **Why:** DNSSEC cryptographically signs DNS records. When you change nameservers, the old signatures become invalid, breaking DNS resolution.
 
 **Where to disable:**
+
 - Most registrars: Domain settings → DNSSEC → Disable
 - Can re-enable later in Route 53 if needed (advanced)
 
@@ -207,11 +220,13 @@ aws route53domains register-domain \
 ```
 
 **Benefits:**
+
 - DNS automatically configured in Route 53
 - No nameserver migration needed
 - Consolidated billing
 
 **Popular TLD prices:**
+
 - `.dev`: ~$12/year
 - `.com`: ~$13/year
 - `.click`: ~$3/year
@@ -231,6 +246,7 @@ Before deploying the module, verify:
 - [ ] Website/email still working (if migrating)
 
 **Test DNS:**
+
 ```bash
 # Should return AWS nameservers
 dig yourdomain.com NS +short
@@ -248,6 +264,7 @@ dig yourdomain.com A +short
 **Problem:** `dig yourdomain.com NS` still shows old nameservers after 30+ minutes
 
 **Solutions:**
+
 1. Check you saved changes at registrar
 2. Some registrars have a "pending" status - approve changes
 3. Clear your local DNS cache: `sudo systemd-resolve --flush-caches` (Linux) or `sudo dscacheutil -flushcache` (Mac)
@@ -260,6 +277,7 @@ dig yourdomain.com A +short
 **Cause:** Local DNS cache or TTL not expired
 
 **Solution:**
+
 1. Wait for previous TTL to expire (check old records' TTL)
 2. Test from different network/device
 3. Use `dig @8.8.8.8 yourdomain.com A` to bypass local cache
@@ -271,6 +289,7 @@ dig yourdomain.com A +short
 **Cause:** MX records not migrated to Route 53
 
 **Solution:**
+
 1. Check current MX records: `dig yourdomain.com MX +short`
 2. Add MX records to Route 53 if missing
 3. Wait 5-10 minutes for propagation
@@ -282,6 +301,7 @@ dig yourdomain.com A +short
 **Cause:** DNSSEC still enabled with old signatures
 
 **Solution:**
+
 1. Disable DNSSEC at your registrar immediately
 2. Wait 1-2 hours for cache to clear
 3. Can re-enable in Route 53 later if needed
@@ -293,9 +313,11 @@ dig yourdomain.com A +short
 **Route 53 Hosted Zone:** $0.50/month per domain
 
 **DNS Queries:** $0.40 per million queries (first 1 billion/month)
+
 - Typical small site: <$1/month in query costs
 
 **Domain Registration** (if using Route 53 Domains): Varies by TLD
+
 - .com: ~$13/year
 - .dev: ~$12/year
 

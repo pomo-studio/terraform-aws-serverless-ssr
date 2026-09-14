@@ -13,6 +13,7 @@ Common issues and solutions when deploying with the Serverless SSR Module.
 **Cause:** Lambda hasn't been invoked yet, so CloudWatch log group wasn't created
 
 **Solution:** This is normal. Invoke the Lambda or wait for first request:
+
 ```bash
 aws lambda invoke --function-name <function-name> --region <region> /tmp/response.json
 ```
@@ -22,6 +23,7 @@ aws lambda invoke --function-name <function-name> --region <region> /tmp/respons
 ### Error: "Invalid fully qualified domain name" (Route53 Health Check)
 
 **Full error:**
+
 ```
 Error: creating Route53 Health Check: operation error Route 53: CreateHealthCheck,
 https response error StatusCode: 400, RequestID: ..., InvalidInput:
@@ -31,6 +33,7 @@ Invalid fully qualified domain name: It may not contain reserved characters of R
 **Cause:** Bug in versions before v1.0.1 - Lambda Function URLs end with "/" which is invalid for health checks
 
 **Solution:**
+
 ```bash
 # Update to latest version
 terraform init -upgrade
@@ -45,6 +48,7 @@ terraform init -upgrade
 ### Error: "Provider configuration not present" during validation
 
 **Full error:**
+
 ```
 Error: Provider configuration not present
 To work with aws_lambda_function.primary its original provider configuration at
@@ -54,6 +58,7 @@ provider["registry.terraform.io/hashicorp/aws"].primary is required
 **Cause:** Trying to validate root module standalone (it requires provider aliases)
 
 **Solution:** This is expected for modules with `configuration_aliases`. Validate examples instead:
+
 ```bash
 cd examples/basic
 terraform init
@@ -67,11 +72,13 @@ terraform validate
 **Symptom:** `terraform plan` or `terraform apply` seems stuck
 
 **Common causes:**
+
 1. **DynamoDB global table replication** - Can take 10-15 minutes (normal)
 2. **ACM certificate validation** - Can take 5-10 minutes (normal)
 3. **AWS credentials expired** - Check `aws sts get-caller-identity`
 
 **Solution:** Be patient for long-running resources. Monitor progress:
+
 ```bash
 # In another terminal, check AWS console or:
 aws dynamodb describe-table --table-name <table-name> --region <region>
@@ -79,7 +86,7 @@ aws dynamodb describe-table --table-name <table-name> --region <region>
 
 ---
 
-##Application Deployment Issues
+## Application Deployment Issues
 
 ### Error: "zip: command not found"
 
@@ -88,6 +95,7 @@ aws dynamodb describe-table --table-name <table-name> --region <region>
 **Cause:** `zip` utility not installed
 
 **Solution:**
+
 ```bash
 # Ubuntu/Debian
 sudo apt install zip
@@ -106,6 +114,7 @@ sudo dnf install zip
 ### Error: "Function not found: arn:aws:lambda:us-east-2:..."
 
 **Full error:**
+
 ```
 An error occurred (ResourceNotFoundException) when calling the UpdateFunctionCode operation:
 Function not found: arn:aws:lambda:us-east-2:137064409667:function:my-app-primary
@@ -114,6 +123,7 @@ Function not found: arn:aws:lambda:us-east-2:137064409667:function:my-app-primar
 **Cause:** AWS CLI using default region (us-east-2) instead of your deployment region (us-east-1)
 
 **Solution:**
+
 ```bash
 # Option 1: Set AWS_REGION environment variable
 export AWS_REGION=us-east-1
@@ -136,6 +146,7 @@ aws configure set region us-east-1
 **Cause:** AWS credentials don't have S3 write permissions
 
 **Solution:**
+
 ```bash
 # Verify credentials
 aws sts get-caller-identity
@@ -158,12 +169,14 @@ aws s3 ls s3://your-bucket-name/
 **Common causes:**
 
 **1. Lambda runtime error**
+
 ```bash
 # Check logs
 aws logs tail /aws/lambda/<function-name> --region <region> --since 10m
 ```
 
 **2. Lambda timeout (default 10s)**
+
 ```bash
 # Increase timeout in module
 lambda_timeout = 30  # seconds
@@ -171,9 +184,11 @@ terraform apply
 ```
 
 **3. DynamoDB permissions missing**
+
 - Check Lambda execution role has `dynamodb:*` permissions on your table
 
 **4. Environment variables misconfigured**
+
 ```bash
 # Check Lambda environment
 aws lambda get-function-configuration \
@@ -187,6 +202,7 @@ aws lambda get-function-configuration \
 ### Site shows 403 Forbidden after upgrading to v2.2.0+
 
 **Symptom:** CloudFront returns 403 with message:
+
 ```
 {"Message":"Forbidden. For troubleshooting Function URL authorization issues, see: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html"}
 ```
@@ -196,10 +212,12 @@ aws lambda get-function-configuration \
 **Root cause:** Missing `lambda:InvokeFunction` permission in Lambda resource policy alongside existing `lambda:InvokeFunctionUrl` permission.
 
 **Why this happens:** CloudFront OAC with Lambda Function URLs requires **two permissions**:
+
 1. `lambda:InvokeFunctionUrl` - For Function URL authorization (already present)
 2. `lambda:InvokeFunction` - For OAC signing (missing in v2.2.0)
 
 **Diagnosis:**
+
 ```bash
 # Check Lambda resource policy
 aws lambda get-policy --function-name <function-name> --region <region>
@@ -209,6 +227,7 @@ aws lambda get-policy --function-name <function-name> --region <region>
 ```
 
 **Solution:** Add the missing permission to all Lambda functions (primary and DR in all regions):
+
 ```bash
 # For each Lambda function (primary and DR):
 aws lambda add-permission \
@@ -232,6 +251,7 @@ aws lambda add-permission \
 **Module fix:** The module has been updated in v2.2.2+ to include both permissions automatically. If using v2.2.0 or v2.2.1, apply the fix above or upgrade.
 
 **Verification:**
+
 1. Both permissions should appear in Lambda resource policy
 2. CloudFront distribution should return 200 OK
 3. Lambda logs should show successful invocations
@@ -247,6 +267,7 @@ aws lambda add-permission \
 **Cause:** CloudFront cache not invalidated
 
 **Solution:**
+
 ```bash
 # Invalidate CloudFront cache
 aws cloudfront create-invalidation \
@@ -268,6 +289,7 @@ curl -I https://yourdomain.com
 **Symptom:** `dig yourdomain.com` returns NXDOMAIN or old IPs
 
 **Diagnosis:**
+
 ```bash
 # Check Route 53 records exist
 aws route53 list-resource-record-sets --hosted-zone-id <zone-id>
@@ -280,6 +302,7 @@ dig @8.8.8.8 yourdomain.com A +short
 ```
 
 **Solutions:**
+
 1. **Nameservers not updated:** Update at your registrar
 2. **DNS propagation:** Wait 10-60 minutes
 3. **Records missing:** Add A record pointing to CloudFront
@@ -296,6 +319,7 @@ See: [Domain Setup Guide](domain-setup.md#troubleshooting)
 **Cause:** ACM waiting for DNS validation records
 
 **Diagnosis:**
+
 ```bash
 # Check certificate status
 aws acm describe-certificate \
@@ -309,6 +333,7 @@ aws route53 list-resource-record-sets \
 ```
 
 **Solutions:**
+
 1. **Wait:** Can take 5-30 minutes
 2. **Check DNS:** Validation CNAME must exist in Route 53
 3. **Manual validation:** Add CNAME if Terraform didn't create it
@@ -320,6 +345,7 @@ aws route53 list-resource-record-sets \
 ### Error: "No value for required variable"
 
 **Full error:**
+
 ```
 Error: No value for required variable
 on variables.tf line 1:
@@ -329,6 +355,7 @@ on variables.tf line 1:
 **Cause:** Required variable not provided
 
 **Solution:** Create `terraform.tfvars`:
+
 ```hcl
 project_name = "my-app"
 domain_name  = "example.com"
@@ -336,6 +363,7 @@ subdomain    = "app"
 ```
 
 Or pass via command line:
+
 ```bash
 terraform apply \
   -var="project_name=my-app" \
@@ -352,6 +380,7 @@ terraform apply \
 **Cause:** Config file format incorrect
 
 **Diagnosis:**
+
 ```bash
 cat config/infra-outputs.json | jq '.app_config.value.project_name'
 # Should output: "my-app"
@@ -359,6 +388,7 @@ cat config/infra-outputs.json | jq '.app_config.value.project_name'
 ```
 
 **Solution:** Export config correctly:
+
 ```bash
 # CORRECT (from infrastructure directory):
 terraform output -json > ~/my-app/config/infra-outputs.json
@@ -378,12 +408,15 @@ terraform output -json app_config > config/infra-outputs.json
 **Cause:** Lambda cold start - normal behavior
 
 **Solutions:**
+
 1. **Increase memory:** More memory = faster cold starts
+
    ```hcl
    lambda_memory_size = 1024  # default 512
    ```
 
 2. **Provisioned concurrency:** Keep Lambda warm (costs more)
+
    ```hcl
    # Not included in module - add manually if needed
    ```
@@ -391,6 +424,7 @@ terraform output -json app_config > config/infra-outputs.json
 3. **Accept it:** Cold starts are part of serverless trade-off
 
 **Typical times:**
+
 - Cold start: 500ms - 2s
 - Warm request: 50-200ms
 
@@ -401,11 +435,13 @@ terraform output -json app_config > config/infra-outputs.json
 **Symptom:** AWS bill higher than expected
 
 **Common causes:**
+
 1. **No cache:** Requests hitting Lambda instead of edge
 2. **Wrong cache policy:** Static assets not cached
 3. **High invalidation count:** Charged per invalidation
 
 **Solutions:**
+
 ```bash
 # Check cache hit ratio
 aws cloudwatch get-metric-statistics \
@@ -421,6 +457,7 @@ aws cloudwatch get-metric-statistics \
 ```
 
 **Optimizations:**
+
 - Use selective invalidation: `/_nuxt/*` instead of `/*`
 - Increase TTL for static assets
 - Use query string caching properly
@@ -488,6 +525,7 @@ If you're still stuck:
 
 1. **Check AWS Console:** Often shows more detailed errors
 2. **Enable debug logging:**
+
    ```bash
    export TF_LOG=DEBUG
    terraform apply

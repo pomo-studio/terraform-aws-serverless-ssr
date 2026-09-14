@@ -5,6 +5,7 @@ This module implements the **Stale-While-Revalidate** pattern for optimal page l
 ## What is Stale-While-Revalidate?
 
 SWR is a caching strategy that gives you the best of both worlds:
+
 - ⚡ **Instant page loads** from CloudFront edge cache
 - 🔄 **Fresh content** via background revalidation
 - 🌍 **Global performance** with ~450 edge locations

@@ -81,6 +81,7 @@ terraform apply
 ```
 
 The deployment will create:
+
 - Lambda functions in primary and DR regions
 - CloudFront distribution with failover
 - S3 buckets for static assets and deployments

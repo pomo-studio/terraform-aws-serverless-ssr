@@ -75,6 +75,7 @@ provider "aws" {
 | `lambda_timeout` | Lambda function timeout in seconds | `number` | `10` | 3-900 |
 
 **Memory recommendations:**
+
 - 512 MB: Small apps, simple SSR
 - 1024 MB: Medium apps, moderate complexity
 - 2048+ MB: Large apps, complex rendering
@@ -136,6 +137,7 @@ provider "aws" {
 | `app_config` | Complete configuration object for application deployment | Yes |
 
 **Structure**:
+
 ```json
 {
   "lambda_function_name_primary": "...",
@@ -151,6 +153,7 @@ provider "aws" {
 ```
 
 **Usage**:
+
 ```bash
 terraform output -json app_config > config/infra-outputs.json
 ```
@@ -265,6 +268,7 @@ All resources follow this pattern:
 ```
 
 **Examples**:
+
 - Lambda: `my-app-primary`
 - S3 static: `my-app-static-{account-id}`
 - DynamoDB: `my-app-visits`

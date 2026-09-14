@@ -17,12 +17,14 @@ CloudFront handles all failover automatically using origin groups. When a primar
 ## Core Components
 
 ### CloudFront Distribution (Global)
+
 - Global CDN with ~450 edge locations
 - Origin groups for automatic failover (Lambda + S3)
 - Optional custom domain with ACM SSL certificate
 - Handles HTTPS termination and caching
 
 ### Lambda Functions (Regional)
+
 - **Runtime**: Node.js 20.x
 - **Regions**: Primary (us-east-1) + DR (us-west-2)
 - **Default**: 512MB memory, 10s timeout
@@ -30,21 +32,25 @@ CloudFront handles all failover automatically using origin groups. When a primar
 - **Bootstrap**: Includes placeholder code, works immediately
 
 ### S3 Buckets (Regional)
+
 - **Static Assets**: Public files (JS, CSS, images) with cross-region replication
 - **Deployments**: Lambda code packages (primary + DR)
 - **Access**: CloudFront via Origin Access Identity (OAI)
 
 ### DynamoDB (Global Table)
+
 - On-demand pricing (pay per request)
 - Automatic bi-directional replication between regions
 - Example schema included (visits counter)
 
 ### Route 53 (Optional)
+
 - Only created if `domain_name` is set and `route53_managed = true`
 - Simple A record (alias) pointing to CloudFront
 - Automatic ACM certificate DNS validation
 
 ### IAM Roles
+
 - **Lambda Execution Role**: DynamoDB, S3, CloudWatch Logs access
 - **S3 Replication Role**: Cross-region replication
 - **CI/CD User** (optional): Deploy permissions for automation
@@ -52,9 +58,11 @@ CloudFront handles all failover automatically using origin groups. When a primar
 ## Traffic Flow
 
 ### SSR Requests (Dynamic)
+
 ```
 User → CloudFront → Lambda (primary or DR) → DynamoDB
 ```
+
 - **Stale-While-Revalidate (SWR)**: Instant cache hits with background refresh
 - Cache duration controlled by Lambda via `Cache-Control` headers
 - Typical: 30-300s cache + 2-60 min stale-while-revalidate
@@ -63,9 +71,11 @@ User → CloudFront → Lambda (primary or DR) → DynamoDB
 See [Caching Guide](caching.md) for details on tuning cache strategy.
 
 ### Static Assets (/_nuxt/*, /favicon.ico)
+
 ```
 User → CloudFront → S3 (primary or DR)
 ```
+
 - Long cache (1 day to 1 year)
 - Immutable assets
 - Automatic failover on 5xx errors
@@ -73,6 +83,7 @@ User → CloudFront → S3 (primary or DR)
 ## Failover
 
 CloudFront origin groups detect 5xx errors and automatically route to DR:
+
 - **Detection**: Immediate (on 500, 502, 503, 504)
 - **Failover**: Automatic
 - **Recovery**: Automatic when primary is healthy
@@ -82,45 +93,55 @@ No health checks needed - CloudFront handles everything.
 ## Domain Options
 
 ### 1. No Domain (CloudFront URL)
+
 ```hcl
 project_name = "my-app"
 # domain_name = null (default)
 ```
+
 **URL**: `https://d111111abcdef8.cloudfront.net`
 
 ### 2. Route53 Domain (Automated)
+
 ```hcl
 project_name      = "my-app"
 domain_name       = "example.com"
 subdomain         = "app"
 route53_managed   = true
 ```
+
 **URL**: `https://app.example.com` (automatic DNS + SSL)
 
 ### 3. External Domain (Manual DNS)
+
 ```hcl
 project_name      = "my-app"
 domain_name       = "example.com"
 subdomain         = "app"
 route53_managed   = false
 ```
+
 **URL**: `https://app.example.com` (after adding DNS records manually)
 
 ## DR Options
 
 ### With DR (Default)
+
 ```hcl
 enable_dr = true  # default
 ```
+
 - Multi-region deployment
 - Automatic failover
 - Data replication
 - Higher availability
 
 ### Without DR
+
 ```hcl
 enable_dr = false
 ```
+
 - Single region (us-east-1)
 - Lower cost (~30% savings)
 - Good for dev/test
@@ -175,11 +196,13 @@ Scales automatically with traffic. DR adds ~$5-10/month for replication.
 ## Monitoring
 
 CloudWatch logs and metrics are automatic:
+
 - Lambda: `/aws/lambda/<function-name>`
 - CloudFront: Requests, errors, bytes transferred
 - DynamoDB: Read/write capacity, throttles
 
 **Recommended alarms** (not included):
+
 - Lambda error rate > 1%
 - CloudFront 5xx rate > 0.5%
 - DynamoDB throttled requests
