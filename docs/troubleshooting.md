@@ -285,7 +285,7 @@ dig @8.8.8.8 yourdomain.com A +short
 3. **Records missing:** Add A record pointing to CloudFront
 4. **DNSSEC issues:** Disable DNSSEC at registrar
 
-See: [Domain Setup Guide](DOMAIN_SETUP.md#troubleshooting)
+See: [Domain Setup Guide](domain-setup.md#troubleshooting)
 
 ---
 

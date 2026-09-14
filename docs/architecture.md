@@ -60,7 +60,7 @@ User → CloudFront → Lambda (primary or DR) → DynamoDB
 - Typical: 30-300s cache + 2-60 min stale-while-revalidate
 - Automatic failover on 5xx errors
 
-See [Caching Guide](CACHING.md) for details on tuning cache strategy.
+See [Caching Guide](caching.md) for details on tuning cache strategy.
 
 ### Static Assets (/_nuxt/*, /favicon.ico)
 ```
@@ -187,7 +187,7 @@ CloudWatch logs and metrics are automatic:
 ## Related Docs
 
 - **[📊 Detailed Diagram](diagram.md)** - Visual architecture
-- **[🚀 Getting Started](GETTING_STARTED.md)** - Step-by-step deployment
-- **[📘 API Reference](API.md)** - All variables and outputs
-- **[⚡ Caching Guide](CACHING.md)** - Stale-While-Revalidate configuration
-- **[🔧 Troubleshooting](TROUBLESHOOTING.md)** - Common issues
+- **[🚀 Getting Started](getting-started.md)** - Step-by-step deployment
+- **[📘 API Reference](api.md)** - All variables and outputs
+- **[⚡ Caching Guide](caching.md)** - Stale-While-Revalidate configuration
+- **[🔧 Troubleshooting](troubleshooting.md)** - Common issues

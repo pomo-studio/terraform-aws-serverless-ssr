@@ -271,6 +271,6 @@ All resources follow this pattern:
 
 ## See Also
 
-- [Getting Started Guide](GETTING_STARTED.md)
-- [Architecture Overview](ARCHITECTURE.md)
+- [Getting Started Guide](getting-started.md)
+- [Architecture Overview](architecture.md)
 - [Examples](../examples/)

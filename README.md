@@ -30,7 +30,7 @@ CloudFront (Global CDN + Origin Groups)
 
 CloudFront origin groups fail over automatically on any 5xx response: no Route 53 health checks required.
 
-**Stale-While-Revalidate (SWR) caching** gives instant page loads from CloudFront edge locations while Lambda refreshes content in the background. See [Caching Guide](docs/CACHING.md) for details.
+**Stale-While-Revalidate (SWR) caching** gives instant page loads from CloudFront edge locations while Lambda refreshes content in the background. See [Caching Guide](docs/caching.md) for details.
 
 Optional: ACM certificate + Route 53 alias record for a custom domain.
 
@@ -277,13 +277,13 @@ The `/favicon.ico` path has its own S3 behavior and is the only `public/` except
 
 ## Documentation
 
-- [Getting Started](docs/GETTING_STARTED.md): first deployment walkthrough
+- [Getting Started](docs/getting-started.md): first deployment walkthrough
 - [Stewardship & Trust](STEWARDSHIP.md): what we commit to and what we don't
-- [Architecture](docs/ARCHITECTURE.md): CloudFront origin groups, failover, cost breakdown
-- [Caching](docs/CACHING.md): Stale-While-Revalidate configuration and tuning
-- [Domain Setup](docs/DOMAIN_SETUP.md): migrating a domain to Route 53
-- [API Reference](docs/API.md): full input/output reference
-- [Troubleshooting](docs/TROUBLESHOOTING.md)
+- [Architecture](docs/architecture.md): CloudFront origin groups, failover, cost breakdown
+- [Caching](docs/caching.md): Stale-While-Revalidate configuration and tuning
+- [Domain Setup](docs/domain-setup.md): migrating a domain to Route 53
+- [API Reference](docs/api.md): full input/output reference
+- [Troubleshooting](docs/troubleshooting.md)
 
 ## Examples
 

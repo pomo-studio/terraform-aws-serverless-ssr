@@ -18,7 +18,7 @@ Full production setup with custom domain, multi-region DR, and CI/CD.
 
 **For Route53 Domain:** Your domain must be in Route53 in the same AWS account.
 
-See [Domain Setup Guide](../../docs/DOMAIN_SETUP.md) for migration instructions.
+See [Domain Setup Guide](../../docs/domain-setup.md) for migration instructions.
 
 ## Usage
 

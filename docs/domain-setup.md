@@ -12,7 +12,7 @@ This module requires your domain to be managed by AWS Route 53. This guide walks
 
 ## Option 1: Domain Already in Route 53
 
-If your domain is already in Route 53, you're all set! Skip to [deploying the module](GETTING_STARTED.md).
+If your domain is already in Route 53, you're all set! Skip to [deploying the module](getting-started.md).
 
 **Verify:**
 ```bash
@@ -309,7 +309,7 @@ Once your domain is in Route 53:
 
 1. ✅ **Verify hosted zone**: `aws route53 list-hosted-zones`
 2. ✅ **Test DNS resolution**: `dig yourdomain.com A +short`
-3. ➡️ **Deploy infrastructure**: [Getting Started Guide](GETTING_STARTED.md)
+3. ➡️ **Deploy infrastructure**: [Getting Started Guide](getting-started.md)
 
 ---
 

@@ -170,14 +170,14 @@ curl -I $(terraform output -raw application_url)
 # Look for: x-cache: Hit from cloudfront
 ```
 
-When you deploy your application, implement cache headers as shown in [Caching Guide](CACHING.md).
+When you deploy your application, implement cache headers as shown in [Caching Guide](caching.md).
 
 ## Next Steps
 
 - [Configure CI/CD](CI_CD.md) for automated deployments
-- [Architecture Overview](ARCHITECTURE.md) to understand the infrastructure
-- [Caching Guide](CACHING.md) to optimize page load performance
-- [API Reference](API.md) for all configuration options
+- [Architecture Overview](architecture.md) to understand the infrastructure
+- [Caching Guide](caching.md) to optimize page load performance
+- [API Reference](api.md) for all configuration options
 
 ## Troubleshooting
 

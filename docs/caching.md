@@ -301,6 +301,6 @@ function getCacheHeaders(path) {
 
 ## Related Documentation
 
-- [Architecture Overview](ARCHITECTURE.md)
-- [Getting Started](GETTING_STARTED.md)
-- [Troubleshooting](TROUBLESHOOTING.md)
+- [Architecture Overview](architecture.md)
+- [Getting Started](getting-started.md)
+- [Troubleshooting](troubleshooting.md)
