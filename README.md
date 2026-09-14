@@ -333,7 +333,7 @@ See the [contribution guide](https://github.com/pomo-studio/.github/blob/main/CO
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | pomo-studio/ssr-cloudfront/aws | = 0.3.0 |
+| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | pomo-studio/ssr-cloudfront/aws | 0.3.3 |
 | <a name="module_cloudfront_support"></a> [cloudfront\_support](#module\_cloudfront\_support) | pomo-studio/ssr-cloudfront-support/aws | 0.2.4 |
 | <a name="module_dns"></a> [dns](#module\_dns) | pomo-studio/ssr-dns/aws | = 0.3.0 |
 | <a name="module_dynamodb"></a> [dynamodb](#module\_dynamodb) | pomo-studio/dynamodb-global-table/aws | = 1.0.1 |
