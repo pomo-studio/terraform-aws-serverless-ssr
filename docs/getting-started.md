@@ -174,7 +174,7 @@ When you deploy your application, implement cache headers as shown in [Caching G
 
 ## Next Steps
 
-- [Configure CI/CD](CI_CD.md) for automated deployments
+- [Configure CI/CD](../README.md#cicd-authentication) for automated deployments
 - [Architecture Overview](architecture.md) to understand the infrastructure
 - [Caching Guide](caching.md) to optimize page load performance
 - [API Reference](api.md) for all configuration options
