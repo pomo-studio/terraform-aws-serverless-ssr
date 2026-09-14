@@ -14,7 +14,7 @@ This module requires your domain to be managed by AWS Route 53. This guide walks
 
 If your domain is already in Route 53, you're all set! Skip to [deploying the module](getting-started.md).
 
-**Verify:**
+#### Verify:
 
 ```bash
 aws route53 list-hosted-zones --query 'HostedZones[*].[Name,Id]' --output table
@@ -41,7 +41,7 @@ aws route53 create-hosted-zone \
 
 Before changing nameservers, copy all existing DNS records to Route 53 to avoid downtime.
 
-**Check current DNS records:**
+#### Check current DNS records:
 
 ```bash
 # A records
@@ -60,7 +60,7 @@ dig yourdomain.com TXT +short
 dig subdomain.yourdomain.com CNAME +short
 ```
 
-**Import records to Route 53:**
+#### Import records to Route 53:
 
 Create a file `dns-records.json`:
 
@@ -101,7 +101,7 @@ aws route53 change-resource-record-sets \
   --change-batch file://dns-records.json
 ```
 
-**Important records to migrate:**
+#### Important records to migrate:
 
 - ✅ A/AAAA records (website IPs)
 - ✅ MX records (email)
@@ -114,7 +114,7 @@ Update your domain's nameservers to point to AWS Route 53.
 
 **AWS Route 53 nameservers** (from Step 1 output):
 
-```
+```text
 ns-####.awsdns-##.com
 ns-####.awsdns-##.net
 ns-####.awsdns-##.org
@@ -123,7 +123,7 @@ ns-####.awsdns-##.co.uk
 
 #### Common Registrars
 
-**Google Domains / Squarespace:**
+#### Google Domains / Squarespace:
 
 1. Go to domains.squarespace.com
 2. Select your domain
@@ -132,7 +132,7 @@ ns-####.awsdns-##.co.uk
 5. Enter all 4 AWS nameservers
 6. Save changes
 
-**GoDaddy:**
+#### GoDaddy:
 
 1. Go to your domain settings
 2. DNS Management → Nameservers
@@ -140,14 +140,14 @@ ns-####.awsdns-##.co.uk
 4. Enter AWS nameservers
 5. Save
 
-**Namecheap:**
+#### Namecheap:
 
 1. Domain List → Manage
 2. Nameservers → Custom DNS
 3. Enter AWS nameservers
 4. Save
 
-**Cloudflare:**
+#### Cloudflare:
 
 1. Remove domain from Cloudflare first
 2. Go to your registrar
@@ -157,7 +157,7 @@ ns-####.awsdns-##.co.uk
 
 DNS changes can take 5-60 minutes (occasionally up to 48 hours).
 
-**Check propagation:**
+#### Check propagation:
 
 ```bash
 # Check if new nameservers are visible
@@ -172,7 +172,7 @@ dig @8.8.8.8 yourdomain.com NS +short
 # ...
 ```
 
-**Test DNS resolution:**
+#### Test DNS resolution:
 
 ```bash
 # Verify A records work
@@ -189,7 +189,7 @@ If your domain has DNSSEC enabled, you must disable it when changing nameservers
 
 **Why:** DNSSEC cryptographically signs DNS records. When you change nameservers, the old signatures become invalid, breaking DNS resolution.
 
-**Where to disable:**
+#### Where to disable:
 
 - Most registrars: Domain settings → DNSSEC → Disable
 - Can re-enable later in Route 53 if needed (advanced)
@@ -219,13 +219,13 @@ aws route53domains register-domain \
   --privacy-protect-tech-contact
 ```
 
-**Benefits:**
+#### Benefits:
 
 - DNS automatically configured in Route 53
 - No nameserver migration needed
 - Consolidated billing
 
-**Popular TLD prices:**
+#### Popular TLD prices:
 
 - `.dev`: ~$12/year
 - `.com`: ~$13/year
@@ -245,7 +245,7 @@ Before deploying the module, verify:
 - [ ] DNSSEC disabled (if was enabled)
 - [ ] Website/email still working (if migrating)
 
-**Test DNS:**
+#### Test DNS:
 
 ```bash
 # Should return AWS nameservers
@@ -263,7 +263,7 @@ dig yourdomain.com A +short
 
 **Problem:** `dig yourdomain.com NS` still shows old nameservers after 30+ minutes
 
-**Solutions:**
+#### Solutions:
 
 1. Check you saved changes at registrar
 2. Some registrars have a "pending" status - approve changes
@@ -276,7 +276,7 @@ dig yourdomain.com A +short
 
 **Cause:** Local DNS cache or TTL not expired
 
-**Solution:**
+#### Solution:
 
 1. Wait for previous TTL to expire (check old records' TTL)
 2. Test from different network/device
@@ -288,7 +288,7 @@ dig yourdomain.com A +short
 
 **Cause:** MX records not migrated to Route 53
 
-**Solution:**
+#### Solution:
 
 1. Check current MX records: `dig yourdomain.com MX +short`
 2. Add MX records to Route 53 if missing
@@ -300,7 +300,7 @@ dig yourdomain.com A +short
 
 **Cause:** DNSSEC still enabled with old signatures
 
-**Solution:**
+#### Solution:
 
 1. Disable DNSSEC at your registrar immediately
 2. Wait 1-2 hours for cache to clear

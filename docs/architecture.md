@@ -2,11 +2,11 @@
 
 Multi-region serverless SSR platform on AWS with automatic failover.
 
-**[📊 View Detailed Diagram](diagram.md)**
+#### [📊 View Detailed Diagram](diagram.md)
 
 ## Overview
 
-```
+```text
 User → CloudFront (Global CDN)
          ├─ Dynamic: Lambda us-east-1 → (failover) → Lambda us-west-2
          └─ Static:  S3 us-east-1    → (failover) → S3 us-west-2
@@ -59,7 +59,7 @@ CloudFront handles all failover automatically using origin groups. When a primar
 
 ### SSR Requests (Dynamic)
 
-```
+```text
 User → CloudFront → Lambda (primary or DR) → DynamoDB
 ```
 
@@ -72,7 +72,7 @@ See [Caching Guide](caching.md) for details on tuning cache strategy.
 
 ### Static Assets (/_nuxt/*, /favicon.ico)
 
-```
+```text
 User → CloudFront → S3 (primary or DR)
 ```
 

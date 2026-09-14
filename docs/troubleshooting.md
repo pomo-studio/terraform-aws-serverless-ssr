@@ -22,9 +22,9 @@ aws lambda invoke --function-name <function-name> --region <region> /tmp/respons
 
 ### Error: "Invalid fully qualified domain name" (Route53 Health Check)
 
-**Full error:**
+#### Full error:
 
-```
+```text
 Error: creating Route53 Health Check: operation error Route 53: CreateHealthCheck,
 https response error StatusCode: 400, RequestID: ..., InvalidInput:
 Invalid fully qualified domain name: It may not contain reserved characters of RFC1738 ";/?:@=&"
@@ -32,7 +32,7 @@ Invalid fully qualified domain name: It may not contain reserved characters of R
 
 **Cause:** Bug in versions before v1.0.1 - Lambda Function URLs end with "/" which is invalid for health checks
 
-**Solution:**
+#### Solution:
 
 ```bash
 # Update to latest version
@@ -47,9 +47,9 @@ terraform init -upgrade
 
 ### Error: "Provider configuration not present" during validation
 
-**Full error:**
+#### Full error:
 
-```
+```text
 Error: Provider configuration not present
 To work with aws_lambda_function.primary its original provider configuration at
 provider["registry.terraform.io/hashicorp/aws"].primary is required
@@ -71,7 +71,7 @@ terraform validate
 
 **Symptom:** `terraform plan` or `terraform apply` seems stuck
 
-**Common causes:**
+#### Common causes:
 
 1. **DynamoDB global table replication** - Can take 10-15 minutes (normal)
 2. **ACM certificate validation** - Can take 5-10 minutes (normal)
@@ -94,7 +94,7 @@ aws dynamodb describe-table --table-name <table-name> --region <region>
 
 **Cause:** `zip` utility not installed
 
-**Solution:**
+#### Solution:
 
 ```bash
 # Ubuntu/Debian
@@ -113,16 +113,16 @@ sudo dnf install zip
 
 ### Error: "Function not found: arn:aws:lambda:us-east-2:..."
 
-**Full error:**
+#### Full error:
 
-```
+```text
 An error occurred (ResourceNotFoundException) when calling the UpdateFunctionCode operation:
 Function not found: arn:aws:lambda:us-east-2:137064409667:function:my-app-primary
 ```
 
 **Cause:** AWS CLI using default region (us-east-2) instead of your deployment region (us-east-1)
 
-**Solution:**
+#### Solution:
 
 ```bash
 # Option 1: Set AWS_REGION environment variable
@@ -145,7 +145,7 @@ aws configure set region us-east-1
 
 **Cause:** AWS credentials don't have S3 write permissions
 
-**Solution:**
+#### Solution:
 
 ```bash
 # Verify credentials
@@ -166,16 +166,16 @@ aws s3 ls s3://your-bucket-name/
 
 **Symptom:** CloudFront returns 502, Lambda logs show errors
 
-**Common causes:**
+#### Common causes:
 
-**1. Lambda runtime error**
+#### 1. Lambda runtime error
 
 ```bash
 # Check logs
 aws logs tail /aws/lambda/<function-name> --region <region> --since 10m
 ```
 
-**2. Lambda timeout (default 10s)**
+#### 2. Lambda timeout (default 10s)
 
 ```bash
 # Increase timeout in module
@@ -183,11 +183,11 @@ lambda_timeout = 30  # seconds
 terraform apply
 ```
 
-**3. DynamoDB permissions missing**
+#### 3. DynamoDB permissions missing
 
 - Check Lambda execution role has `dynamodb:*` permissions on your table
 
-**4. Environment variables misconfigured**
+#### 4. Environment variables misconfigured
 
 ```bash
 # Check Lambda environment
@@ -203,7 +203,7 @@ aws lambda get-function-configuration \
 
 **Symptom:** CloudFront returns 403 with message:
 
-```
+```text
 {"Message":"Forbidden. For troubleshooting Function URL authorization issues, see: https://docs.aws.amazon.com/lambda/latest/dg/urls-auth.html"}
 ```
 
@@ -216,7 +216,7 @@ aws lambda get-function-configuration \
 1. `lambda:InvokeFunctionUrl` - For Function URL authorization (already present)
 2. `lambda:InvokeFunction` - For OAC signing (missing in v2.2.0)
 
-**Diagnosis:**
+#### Diagnosis:
 
 ```bash
 # Check Lambda resource policy
@@ -250,7 +250,7 @@ aws lambda add-permission \
 
 **Module fix:** The module has been updated in v2.2.2+ to include both permissions automatically. If using v2.2.0 or v2.2.1, apply the fix above or upgrade.
 
-**Verification:**
+#### Verification:
 
 1. Both permissions should appear in Lambda resource policy
 2. CloudFront distribution should return 200 OK
@@ -266,7 +266,7 @@ aws lambda add-permission \
 
 **Cause:** CloudFront cache not invalidated
 
-**Solution:**
+#### Solution:
 
 ```bash
 # Invalidate CloudFront cache
@@ -288,7 +288,7 @@ curl -I https://yourdomain.com
 
 **Symptom:** `dig yourdomain.com` returns NXDOMAIN or old IPs
 
-**Diagnosis:**
+#### Diagnosis:
 
 ```bash
 # Check Route 53 records exist
@@ -301,7 +301,7 @@ dig yourdomain.com NS +short
 dig @8.8.8.8 yourdomain.com A +short
 ```
 
-**Solutions:**
+#### Solutions:
 
 1. **Nameservers not updated:** Update at your registrar
 2. **DNS propagation:** Wait 10-60 minutes
@@ -318,7 +318,7 @@ See: [Domain Setup Guide](domain-setup.md#troubleshooting)
 
 **Cause:** ACM waiting for DNS validation records
 
-**Diagnosis:**
+#### Diagnosis:
 
 ```bash
 # Check certificate status
@@ -332,7 +332,7 @@ aws route53 list-resource-record-sets \
   --query "ResourceRecordSets[?Type=='CNAME']"
 ```
 
-**Solutions:**
+#### Solutions:
 
 1. **Wait:** Can take 5-30 minutes
 2. **Check DNS:** Validation CNAME must exist in Route 53
@@ -344,9 +344,9 @@ aws route53 list-resource-record-sets \
 
 ### Error: "No value for required variable"
 
-**Full error:**
+#### Full error:
 
-```
+```text
 Error: No value for required variable
 on variables.tf line 1:
   1: variable "project_name" {
@@ -379,7 +379,7 @@ terraform apply \
 
 **Cause:** Config file format incorrect
 
-**Diagnosis:**
+#### Diagnosis:
 
 ```bash
 cat config/infra-outputs.json | jq '.app_config.value.project_name'
@@ -407,7 +407,7 @@ terraform output -json app_config > config/infra-outputs.json
 
 **Cause:** Lambda cold start - normal behavior
 
-**Solutions:**
+#### Solutions:
 
 1. **Increase memory:** More memory = faster cold starts
 
@@ -423,7 +423,7 @@ terraform output -json app_config > config/infra-outputs.json
 
 3. **Accept it:** Cold starts are part of serverless trade-off
 
-**Typical times:**
+#### Typical times:
 
 - Cold start: 500ms - 2s
 - Warm request: 50-200ms
@@ -434,13 +434,13 @@ terraform output -json app_config > config/infra-outputs.json
 
 **Symptom:** AWS bill higher than expected
 
-**Common causes:**
+#### Common causes:
 
 1. **No cache:** Requests hitting Lambda instead of edge
 2. **Wrong cache policy:** Static assets not cached
 3. **High invalidation count:** Charged per invalidation
 
-**Solutions:**
+#### Solutions:
 
 ```bash
 # Check cache hit ratio
@@ -456,7 +456,7 @@ aws cloudwatch get-metric-statistics \
 # Target: >80% cache hit ratio
 ```
 
-**Optimizations:**
+#### Optimizations:
 
 - Use selective invalidation: `/_nuxt/*` instead of `/*`
 - Increase TTL for static assets

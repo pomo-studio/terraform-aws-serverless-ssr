@@ -18,7 +18,7 @@ This module requires two AWS provider aliases:
 | `aws.primary` | Primary region for all resources | us-east-1 |
 | `aws.dr` | DR region for failover resources | us-west-2 |
 
-**Example provider configuration:**
+#### Example provider configuration:
 
 ```hcl
 provider "aws" {
@@ -74,7 +74,7 @@ provider "aws" {
 | `lambda_memory_size` | Lambda function memory in MB | `number` | `512` | 128-10240 |
 | `lambda_timeout` | Lambda function timeout in seconds | `number` | `10` | 3-900 |
 
-**Memory recommendations:**
+#### Memory recommendations:
 
 - 512 MB: Small apps, simple SSR
 - 1024 MB: Medium apps, moderate complexity
@@ -263,7 +263,7 @@ Standard subdomain format (alphanumeric and hyphens).
 
 All resources follow this pattern:
 
-```
+```text
 {project_name}-{resource_type}-{region}
 ```
 

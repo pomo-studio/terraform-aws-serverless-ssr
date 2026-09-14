@@ -12,7 +12,7 @@ SWR is a caching strategy that gives you the best of both worlds:
 
 ### How It Works
 
-```
+```text
 User Request ──┬─► CloudFront has fresh cache? ──YES──► Return cached page (instant!)
                │                                    │
                │                                    └──► Trigger background refresh
@@ -26,7 +26,7 @@ User Request ──┬─► CloudFront has fresh cache? ──YES──► Retu
 
 ### Cache-Control Header Syntax
 
-```
+```text
 Cache-Control: public, max-age=<fresh>, stale-while-revalidate=<stale>
 ```
 
