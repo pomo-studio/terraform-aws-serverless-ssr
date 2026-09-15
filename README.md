@@ -423,3 +423,6 @@ See the [contribution guide](https://github.com/pomo-studio/.github/blob/main/CO
 <!-- END_TF_DOCS -->
 
 </details>
+
+Part of [postmodern.tf](https://pomo.dev), the open-source AWS infrastructure
+collection created by [André Pitanga](https://pomo.studio).
