@@ -1,7 +1,7 @@
 module "dynamodb" {
   count   = var.enable_dynamo ? 1 : 0
   source  = "pomo-studio/dynamodb-global-table/aws"
-  version = "= 1.0.1"
+  version = "1.0.5"
 
   providers = {
     aws.primary = aws.primary
