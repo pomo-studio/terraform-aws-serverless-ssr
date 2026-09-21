@@ -1,6 +1,6 @@
 module "dns" {
   source  = "pomo-studio/ssr-dns/aws"
-  version = "= 0.3.0"
+  version = "0.3.2"
 
   providers = {
     aws = aws.primary
