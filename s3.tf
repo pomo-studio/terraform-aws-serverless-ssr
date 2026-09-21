@@ -1,6 +1,6 @@
 module "storage" {
   source  = "pomo-studio/ssr-storage/aws"
-  version = "0.2.4"
+  version = "0.2.5"
 
   providers = {
     aws    = aws.primary
