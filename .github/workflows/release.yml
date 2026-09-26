@@ -56,7 +56,7 @@ jobs:
 
             ## Release Safety
 
-            See [docs/RELEASE_CHECKLIST.md](https://github.com/pomo-studio/terraform-aws-serverless-ssr/blob/${{ steps.get_version.outputs.VERSION }}/docs/RELEASE_CHECKLIST.md).
+            See [docs/release-checklist.md](https://github.com/pomo-studio/terraform-aws-serverless-ssr/blob/${{ steps.get_version.outputs.VERSION }}/docs/release-checklist.md).
           generate_release_notes: true
           draft: false
           prerelease: ${{ contains(steps.get_version.outputs.VERSION, 'alpha') || contains(steps.get_version.outputs.VERSION, 'beta') || contains(steps.get_version.outputs.VERSION, 'rc') }}
