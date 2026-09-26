@@ -159,12 +159,44 @@ provider "aws" {
 
 ---
 
+## Requests with a body (`POST`, `PUT`, `PATCH`)
+
+CloudFront signs requests to the Lambda Function URL with SigV4 through the Origin Access Control, but it does not hash the request body. For any request with a body, the caller must send the body's SHA-256 hash, as lowercase hex, in an `x-amz-content-sha256` header. Without it, the Function URL rejects the request with `403` and `The request signature we calculated does not match the signature you provided`. Requests without a body (`GET`, `HEAD`, a `POST` with no body) are unaffected. See [Restricting access to an AWS Lambda function URL origin](https://docs.aws.amazon.com/AmazonCloudFront/latest/DeveloperGuide/private-content-restricting-access-to-lambda.html).
+
+No module configuration is needed; the header does not have to be added to the origin request policy. In the browser:
+
+```ts
+export async function postJson(url: string, data: unknown) {
+  const body = JSON.stringify(data)
+  const digest = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(body))
+  const hash = [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
+  return fetch(url, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-amz-content-sha256': hash },
+    body, // must be the exact bytes that were hashed
+  })
+}
+```
+
+From a shell:
+
+```bash
+BODY='{"ping":"pong"}'
+curl -X POST https://your-distribution.example.com/api/example \
+  -H 'content-type: application/json' \
+  -H "x-amz-content-sha256: $(printf '%s' "$BODY" | sha256sum | cut -d' ' -f1)" \
+  --data-binary "$BODY"
+```
+
+This works for callers you control. Third-party webhooks (payment processors, scheduling tools) cannot add the header, so they cannot reach `/api/*` through this module; send them to a separate endpoint.
+
 ## Integration tests (deployed behavior)
 
 The module includes a lightweight integration test script that validates:
 
 - CloudFront → Lambda access (OAC + `InvokeFunction` permissions)
-- `POST /api/*` behavior (cache behavior + origin group bypass)
+- `POST /api/*` behavior (cache behavior + origin group bypass), sent with `x-amz-content-sha256`
+- Optional: a `POST` without `x-amz-content-sha256` is rejected (set `EXPECT_UNHASHED_POST_STATUS=403`)
 - Optional: direct Lambda Function URL access is blocked (expects 403)
 
 Scope boundary:
@@ -197,6 +229,7 @@ GET_PATH=/ \
 EXPECT_GET_STATUS=200 \
 EXPECT_POST_STATUS=200 \
 EXPECT_API_CACHE_CONTROL=no-store \
+EXPECT_UNHASHED_POST_STATUS=403 \
 LAMBDA_FUNCTION_URL=https://xxxx.lambda-url.us-east-1.on.aws \
 make test-integration
 ```
