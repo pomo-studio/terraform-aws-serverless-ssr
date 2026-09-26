@@ -199,6 +199,24 @@ aws lambda get-function-configuration \
 
 ---
 
+### POST to `/api/*` returns 403 "signature does not match"
+
+**Symptom:** `GET` requests work, but any `POST`, `PUT` or `PATCH` with a body returns:
+
+```text
+{"message":"The request signature we calculated does not match the signature you provided. Check your AWS Secret Access Key and signing method. Consult the service documentation for details."}
+```
+
+A `POST` with no body reaches the application normally.
+
+**Root cause:** CloudFront signs the request to the Lambda Function URL but does not hash the body. For a request with a body, the caller must send the body's SHA-256 hash in an `x-amz-content-sha256` header.
+
+**Solution:** Send the header from the client. See [Requests with a body](../README.md#requests-with-a-body-post-put-patch) for browser and shell examples. The hash must be computed over the exact bytes sent. No module or origin request policy change is needed.
+
+Callers that cannot add the header, such as third-party webhooks, cannot use this path.
+
+---
+
 ### Site shows 403 Forbidden after upgrading to v2.2.0+
 
 **Symptom:** CloudFront returns 403 with message:

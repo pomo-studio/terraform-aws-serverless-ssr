@@ -13,6 +13,13 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 
 The decomposition landed in [`90caf19`](https://github.com/pomo-studio/terraform-aws-serverless-ssr/commit/90caf19f6928930266bfb4f763fd318b30395a08) (2026-02-26), which removed the local `modules/` submodules and pointed the root module at the registry-published `ssr-*` children.
 
+## [Unreleased]
+
+### Fixed
+
+- Documented the `x-amz-content-sha256` requirement for `POST`, `PUT` and `PATCH` requests to `/api/*` ([#30](https://github.com/pomo-studio/terraform-aws-serverless-ssr/issues/30)). Requests with a body were rejected with a SigV4 signature mismatch because CloudFront's OAC does not hash the payload; the caller must send the hash. No infrastructure change.
+- `tests/integration.sh` now sends `x-amz-content-sha256` with its `POST` check and uses `--data-binary`, so the check passes against a correctly deployed stack. New optional `EXPECT_UNHASHED_POST_STATUS` confirms that unhashed bodies are rejected.
+
 ## [v2.7.1] - 2026-09-12
 
 ### Added

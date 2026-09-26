@@ -9,6 +9,9 @@ GET_PATH="${GET_PATH:-/}"
 EXPECT_GET_STATUS="${EXPECT_GET_STATUS:-200}"
 EXPECT_POST_STATUS="${EXPECT_POST_STATUS:-200}"
 EXPECT_API_CACHE_CONTROL="${EXPECT_API_CACHE_CONTROL:-no-store}"
+# Optional: expected status for a POST sent without x-amz-content-sha256
+# (403 confirms the OAC is signing and enforcing the body hash).
+EXPECT_UNHASHED_POST_STATUS="${EXPECT_UNHASHED_POST_STATUS:-}"
 LAMBDA_FUNCTION_URL="${LAMBDA_FUNCTION_URL:-}"
 DEBUG="${DEBUG:-0}"
 
@@ -22,10 +25,22 @@ BASE_URL="${BASE_URL%/}"
 _tmp_headers() { mktemp -t ssr-int-headers.XXXXXX; }
 _tmp_body() { mktemp -t ssr-int-body.XXXXXX; }
 
+sha256_hex() {
+  if command -v sha256sum >/dev/null 2>&1; then
+    printf '%s' "$1" | sha256sum | cut -d' ' -f1
+  else
+    printf '%s' "$1" | shasum -a 256 | cut -d' ' -f1
+  fi
+}
+
+# Body-bearing requests through the Lambda OAC need x-amz-content-sha256
+# (CloudFront signs the request but does not hash the payload). Pass
+# "unhashed" as the 4th argument to omit it.
 request() {
   local method="$1"; shift
   local url="$1"; shift
   local data="${1:-}"
+  local hash_mode="${2:-hashed}"
 
   local headers
   local body
@@ -34,9 +49,14 @@ request() {
 
   local status
   if [[ -n "$data" ]]; then
+    local hash_args=()
+    if [[ "$hash_mode" != "unhashed" ]]; then
+      hash_args=(-H "x-amz-content-sha256: $(sha256_hex "$data")")
+    fi
     status=$(curl -sS -o "$body" -D "$headers" -w "%{http_code}" -X "$method" \
       -H "Content-Type: application/json" \
-      --data "$data" \
+      ${hash_args[@]+"${hash_args[@]}"} \
+      --data-binary "$data" \
       "$url")
   else
     status=$(curl -sS -o "$body" -D "$headers" -w "%{http_code}" -X "$method" "$url")
@@ -104,6 +124,13 @@ if [[ "$SKIP_POST" != "1" && -n "$API_PATH" ]]; then
   fi
   if [[ -n "$EXPECT_API_CACHE_CONTROL" ]]; then
     if ! expect_header_contains "POST $API_PATH" "$headers" "Cache-Control" "$EXPECT_API_CACHE_CONTROL"; then
+      failures=$((failures+1))
+    fi
+  fi
+  if [[ -n "$EXPECT_UNHASHED_POST_STATUS" ]]; then
+    result=$(request "POST" "$BASE_URL$API_PATH" "$POST_PAYLOAD" "unhashed")
+    status="${result%%|*}"
+    if ! expect_status "POST $API_PATH (no x-amz-content-sha256)" "$EXPECT_UNHASHED_POST_STATUS" "$status"; then
       failures=$((failures+1))
     fi
   fi
