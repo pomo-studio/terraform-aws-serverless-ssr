@@ -155,6 +155,31 @@ run "multi_region_configuration" {
   }
 }
 
+# Test 2b: Single-region configuration (#29)
+run "single_region_configuration" {
+  command = plan
+
+  variables {
+    project_name = "test-app"
+    enable_dr    = false
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  assert {
+    condition     = length(module.lambda_dr) == 0 && length(aws_lambda_function_url.dr) == 0
+    error_message = "Should not create a DR Lambda or Function URL when enable_dr = false"
+  }
+
+  assert {
+    condition     = output.lambda_function_url_dr == null && output.s3_bucket_deployments_dr == null
+    error_message = "DR outputs should be null when enable_dr = false"
+  }
+}
+
 # Test 3: Custom domain configuration
 run "custom_domain_configuration" {
   command = plan

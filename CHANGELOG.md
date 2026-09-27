@@ -13,6 +13,19 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 
 The decomposition landed in [`90caf19`](https://github.com/pomo-studio/terraform-aws-serverless-ssr/commit/90caf19f6928930266bfb4f763fd318b30395a08) (2026-02-26), which removed the local `modules/` submodules and pointed the root module at the registry-published `ssr-*` children.
 
+## [v2.7.3] - 2026-09-26
+
+**Upgrade risk: none expected for DR-enabled stacks (the default).** Upgrade directly from v2.7.x; roll back by pinning `= 2.7.2`. With `enable_dr = true` the only plan change is three replication IAM resources *moving* to indexed addresses (`moved` blocks, no replacement); verified with speculative plans against a live DR-enabled consumer.
+
+### Fixed
+
+- `enable_dr = false` now works ([#29](https://github.com/pomo-studio/terraform-aws-serverless-ssr/issues/29)). Previously apply failed twice: CloudFront got DR origins with an empty `domain_name`, and the S3 replication IAM policy got an empty resource ARN. Fixed in the child modules; without DR, CloudFront routes straight to the primary origins with no origin groups.
+
+### Changed
+
+- Child module pins: `ssr-cloudfront` `0.3.3` → `0.3.6`, `ssr-storage` `0.2.4` → `0.2.6` (the #29 fixes; the other versions in these ranges are documentation-only).
+- Unit test for `enable_dr = false`.
+
 ## [v2.7.2] - 2026-09-26
 
 **Upgrade risk: none expected.** No resource, input or output changes. Upgrade directly from v2.7.x; roll back by pinning `= 2.7.1`. Verified with a speculative plan against a live consumer (monument-training, `enable_dr = true`, `enable_dynamo = false`): v2.7.1 and this release produce identical plans. Both show the same two in-place `aws_s3_bucket_policy` updates, a pre-existing perpetual diff where AWS normalizes the OAI `CanonicalUser` principal to its ARN.
