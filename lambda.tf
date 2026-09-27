@@ -52,7 +52,7 @@ exports.handler = async (event, context) => {
     body: `<!DOCTYPE html>
 <html>
 <head>
-  <title>$${var.project_name}</title>
+  <title>${var.project_name}</title>
   <style>
     body { font-family: system-ui, -apple-system, sans-serif; max-width: 650px; margin: 50px auto; padding: 20px; line-height: 1.6; }
     code { background: #f4f4f4; padding: 2px 6px; border-radius: 3px; font-size: 0.9em; }
@@ -64,7 +64,7 @@ exports.handler = async (event, context) => {
   </style>
 </head>
 <body>
-  <h1>$${var.project_name}</h1>
+  <h1>${var.project_name}</h1>
   <p>Serverless SSR Platform - Bootstrap Mode</p>
   
   <div class="swr">
@@ -123,6 +123,12 @@ resource "aws_s3_object" "bootstrap_primary" {
   key    = "lambda/function.zip"
   source = data.archive_file.bootstrap.output_path
   etag   = data.archive_file.bootstrap.output_md5
+
+  # Written once at creation. App deploys upload to the same key afterwards,
+  # so later bootstrap or module-path changes must not overwrite the app.
+  lifecycle {
+    ignore_changes = [etag, source]
+  }
 }
 
 # Upload bootstrap code to S3 (DR) - if enabled
@@ -134,6 +140,12 @@ resource "aws_s3_object" "bootstrap_dr" {
   key    = "lambda/function.zip"
   source = data.archive_file.bootstrap.output_path
   etag   = data.archive_file.bootstrap.output_md5
+
+  # Written once at creation. App deploys upload to the same key afterwards,
+  # so later bootstrap or module-path changes must not overwrite the app.
+  lifecycle {
+    ignore_changes = [etag, source]
+  }
 }
 
 module "lambda_primary" {
