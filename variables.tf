@@ -59,6 +59,22 @@ variable "certificate_arn" {
   }
 }
 
+variable "additional_domain_names" {
+  description = "Extra hostnames in the same domain served by the site, e.g. [\"www.example.com\"] when the site is on the bare domain. They are added to the certificate and get alias records when route53_managed = true, and requests to them are redirected with a 301 to the main domain. Each must be a subdomain of domain_name. A supplied certificate_arn must already cover them. Only applies if domain_name is set."
+  type        = list(string)
+  default     = []
+
+  validation {
+    condition     = alltrue([for name in var.additional_domain_names : can(regex("^[a-z0-9]([a-z0-9-]*[a-z0-9])?(\\.[a-z0-9]([a-z0-9-]*[a-z0-9])?)+$", name))])
+    error_message = "Each additional_domain_names entry must be a lowercase hostname, e.g. www.example.com."
+  }
+
+  validation {
+    condition     = length(distinct(var.additional_domain_names)) == length(var.additional_domain_names)
+    error_message = "additional_domain_names must not contain duplicates."
+  }
+}
+
 # Optional Variables
 # ------------------------------------------------------------------------------
 

@@ -339,3 +339,149 @@ run "no_dynamodb_configuration" {
     error_message = "Should not create DynamoDB table when disabled"
   }
 }
+
+# additional_domain_names (www alongside the bare domain)
+run "additional_domain_names_default_empty" {
+  command = plan
+
+  variables {
+    project_name    = "test-app"
+    domain_name     = "example.com"
+    route53_managed = false
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  assert {
+    condition     = length(output.dns_additional_records) == 0
+    error_message = "No additional records should exist by default"
+  }
+}
+
+run "additional_domain_names_external_dns" {
+  command = plan
+
+  variables {
+    project_name            = "test-app"
+    domain_name             = "example.com"
+    route53_managed         = false
+    additional_domain_names = ["www.example.com"]
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  assert {
+    condition     = length(output.dns_additional_records) == 1 && output.dns_additional_records[0].name == "www.example.com"
+    error_message = "Should emit one manual DNS record for www.example.com"
+  }
+}
+
+run "additional_domain_names_route53" {
+  command = plan
+
+  variables {
+    project_name            = "test-app"
+    domain_name             = "example.com"
+    route53_managed         = true
+    additional_domain_names = ["www.example.com"]
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  # Mocks leave domain_validation_options unknown at plan time, which the
+  # validation-record for_each cannot accept; the real provider knows the
+  # domain names at plan time. Supply them here.
+  override_resource {
+    target          = module.dns.aws_acm_certificate.main
+    override_during = plan
+    values = {
+      arn = "arn:aws:acm:us-east-1:123456789012:certificate/11111111-2222-3333-4444-555555555555"
+      domain_validation_options = [
+        { domain_name = "example.com", resource_record_name = "_a.example.com.", resource_record_type = "CNAME", resource_record_value = "_a.acm-validations.aws." },
+        { domain_name = "www.example.com", resource_record_name = "_b.www.example.com.", resource_record_type = "CNAME", resource_record_value = "_b.acm-validations.aws." },
+      ]
+    }
+  }
+
+  assert {
+    condition     = length(output.dns_additional_records) == 0
+    error_message = "Route 53 manages the records, so none should be emitted for manual setup"
+  }
+}
+
+run "rejects_additional_domain_uppercase" {
+  command = plan
+
+  variables {
+    project_name            = "test-app"
+    domain_name             = "example.com"
+    additional_domain_names = ["WWW.example.com"]
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  expect_failures = [var.additional_domain_names]
+}
+
+run "rejects_additional_domain_outside_domain" {
+  command = plan
+
+  variables {
+    project_name            = "test-app"
+    domain_name             = "example.com"
+    additional_domain_names = ["www.other.com"]
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  expect_failures = [data.aws_caller_identity.current]
+}
+
+run "rejects_additional_domain_without_domain_name" {
+  command = plan
+
+  variables {
+    project_name            = "test-app"
+    additional_domain_names = ["www.example.com"]
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  expect_failures = [data.aws_caller_identity.current]
+}
+
+run "rejects_additional_domain_equal_to_site_domain" {
+  command = plan
+
+  variables {
+    project_name            = "test-app"
+    domain_name             = "example.com"
+    subdomain               = "www"
+    additional_domain_names = ["www.example.com"]
+  }
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  expect_failures = [data.aws_caller_identity.current]
+}

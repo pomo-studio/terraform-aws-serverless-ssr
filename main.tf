@@ -40,4 +40,21 @@ locals {
 
 data "aws_caller_identity" "current" {
   provider = aws.primary
+
+  # Cross-variable checks for additional_domain_names. A precondition rather
+  # than a variable validation keeps Terraform >= 1.5 supported.
+  lifecycle {
+    precondition {
+      condition     = length(var.additional_domain_names) == 0 || var.domain_name != null
+      error_message = "additional_domain_names requires domain_name to be set."
+    }
+    precondition {
+      condition     = var.domain_name == null || alltrue([for name in var.additional_domain_names : endswith(name, ".${var.domain_name}")])
+      error_message = "Each additional_domain_names entry must be a subdomain of domain_name."
+    }
+    precondition {
+      condition     = !contains(var.additional_domain_names, coalesce(local.full_domain, "-"))
+      error_message = "additional_domain_names must not include the site's own domain."
+    }
+  }
 }

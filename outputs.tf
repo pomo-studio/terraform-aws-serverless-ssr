@@ -161,3 +161,8 @@ output "dns_cloudfront_record" {
   description = "DNS record to point domain to CloudFront (add this to your DNS provider if route53_managed = false)"
   value       = module.dns.dns_cloudfront_record
 }
+
+output "dns_additional_records" {
+  description = "DNS records to point each additional_domain_names entry to CloudFront (add these to your DNS provider if route53_managed = false)"
+  value       = module.dns.dns_additional_records
+}
