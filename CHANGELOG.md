@@ -13,6 +13,30 @@ Starting with v2.4.9, this module was decomposed into registry-published child m
 
 The decomposition landed in [`90caf19`](https://github.com/pomo-studio/terraform-aws-serverless-ssr/commit/90caf19f6928930266bfb4f763fd318b30395a08) (2026-02-26), which removed the local `modules/` submodules and pointed the root module at the registry-published `ssr-*` children.
 
+## [v2.8.0] - 2026-10-02
+
+**Upgrade risk: none expected.** New optional input only. With the default (`[]`) the plan is unchanged; verified with speculative plans against every current consumer. Upgrade directly from v2.7.x; roll back by pinning `= 2.7.4`.
+
+### Added
+
+- `additional_domain_names`: extra hostnames in the same domain, e.g. `["www.example.com"]` for a site on the bare domain. They are added to the certificate, get alias records when `route53_managed = true`, and are redirected with a 301 to the main domain (path and every query parameter kept; parameter order is not preserved). Checked at plan time: lowercase hostnames, no duplicates, subdomains of `domain_name`, not the site's own domain.
+- `dns_additional_records` output, for setups where Route 53 does not manage the zone.
+
+### Changed
+
+- Child module pins: `ssr-dns` `0.3.0` → `0.4.0`, `ssr-cloudfront` `0.3.6` → `0.4.0` (the feature above; `ssr-dns` 0.3.1 and 0.3.2 were documentation-only), `ssr-cloudfront-support` `0.2.4` → `0.2.6` (Dependabot).
+
+## [v2.7.4] - 2026-09-27
+
+*Entry added after release; it was missing from the v2.7.4 tag.*
+
+**Upgrade risk: none expected.** No resource additions or removals; existing stacks see no plan change. Upgrade directly from v2.7.x; roll back by pinning `= 2.7.3`.
+
+### Fixed
+
+- The bootstrap placeholder Lambda now starts ([#35](https://github.com/pomo-studio/terraform-aws-serverless-ssr/issues/35)). `$${var.project_name}` rendered a literal `${var.project_name}` into the JavaScript, so the function failed to initialize (`SyntaxError: Unexpected token 'var'`) and a fresh stack returned 502 until the first app deploy.
+- The bootstrap S3 objects (`lambda/function.zip`) now ignore later `etag`/`source` changes. App deploys upload to the same key, so changing the placeholder code or the module's install path could otherwise re-upload the placeholder over the deployed app's zip on the next apply.
+
 ## [v2.7.3] - 2026-09-26
 
 **Upgrade risk: none expected for DR-enabled stacks (the default).** Upgrade directly from v2.7.x; roll back by pinning `= 2.7.2`. With `enable_dr = true` the only plan change is three replication IAM resources *moving* to indexed addresses (`moved` blocks, no replacement); verified with speculative plans against a live DR-enabled consumer.

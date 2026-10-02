@@ -81,6 +81,31 @@ Output: `https://app.example.com`: DNS and ACM certificate created automatically
 
 ---
 
+### Bare domain with www
+
+Serve the site on the bare domain and redirect `www` to it:
+
+```hcl
+module "ssr" {
+  source  = "pomo-studio/serverless-ssr/aws"
+  version = "~> 2.8"
+
+  providers = {
+    aws.primary = aws.primary
+    aws.dr      = aws.dr
+  }
+
+  project_name            = "my-app"
+  domain_name             = "example.com"
+  route53_managed         = true
+  additional_domain_names = ["www.example.com"]
+}
+```
+
+`www.example.com` is added to the certificate and gets its own alias record. A CloudFront Function answers every request to it with a 301 to `https://example.com`, keeping the path and every query parameter (their order is not preserved, which almost never matters). Additional names must be subdomains of `domain_name`.
+
+---
+
 ### Custom domain (external DNS)
 
 ```hcl
@@ -365,9 +390,9 @@ See the [contribution guide](https://github.com/pomo-studio/.github/blob/main/CO
 
 | Name | Source | Version |
 |------|--------|---------|
-| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | pomo-studio/ssr-cloudfront/aws | 0.3.6 |
+| <a name="module_cloudfront"></a> [cloudfront](#module\_cloudfront) | pomo-studio/ssr-cloudfront/aws | 0.4.0 |
 | <a name="module_cloudfront_support"></a> [cloudfront\_support](#module\_cloudfront\_support) | pomo-studio/ssr-cloudfront-support/aws | 0.2.6 |
-| <a name="module_dns"></a> [dns](#module\_dns) | pomo-studio/ssr-dns/aws | = 0.3.0 |
+| <a name="module_dns"></a> [dns](#module\_dns) | pomo-studio/ssr-dns/aws | 0.4.0 |
 | <a name="module_dynamodb"></a> [dynamodb](#module\_dynamodb) | pomo-studio/dynamodb-global-table/aws | 1.0.5 |
 | <a name="module_lambda_dr"></a> [lambda\_dr](#module\_lambda\_dr) | pomo-studio/ssr-lambda/aws | 0.2.3 |
 | <a name="module_lambda_primary"></a> [lambda\_primary](#module\_lambda\_primary) | pomo-studio/ssr-lambda/aws | 0.2.3 |
@@ -409,6 +434,7 @@ See the [contribution guide](https://github.com/pomo-studio/.github/blob/main/CO
 
 | Name | Description | Type | Default | Required |
 |------|-------------|------|---------|:--------:|
+| <a name="input_additional_domain_names"></a> [additional\_domain\_names](#input\_additional\_domain\_names) | Extra hostnames in the same domain served by the site, e.g. ["www.example.com"] when the site is on the bare domain. They are added to the certificate and get alias records when route53\_managed = true, and requests to them are redirected with a 301 to the main domain. Each must be a subdomain of domain\_name. A supplied certificate\_arn must already cover them. Only applies if domain\_name is set. | `list(string)` | `[]` | no |
 | <a name="input_certificate_arn"></a> [certificate\_arn](#input\_certificate\_arn) | ARN of an existing ACM certificate covering the site domain. When set, the module attaches this certificate instead of requesting and validating its own. Must be in us-east-1 for CloudFront. Only applies if domain\_name is set. | `string` | `null` | no |
 | <a name="input_create_ci_cd_user"></a> [create\_ci\_cd\_user](#input\_create\_ci\_cd\_user) | Create IAM user for CI/CD deployments. Prefer OIDC (set false) over static credentials. | `bool` | `false` | no |
 | <a name="input_domain_name"></a> [domain\_name](#input\_domain\_name) | Base domain name (e.g., example.com). Leave null to use CloudFront domain only. | `string` | `null` | no |
@@ -441,6 +467,7 @@ See the [contribution guide](https://github.com/pomo-studio/.github/blob/main/CO
 | <a name="output_cloudfront_distribution_id"></a> [cloudfront\_distribution\_id](#output\_cloudfront\_distribution\_id) | CloudFront distribution ID for cache invalidation |
 | <a name="output_cloudfront_domain_name"></a> [cloudfront\_domain\_name](#output\_cloudfront\_domain\_name) | CloudFront domain name |
 | <a name="output_custom_domain_enabled"></a> [custom\_domain\_enabled](#output\_custom\_domain\_enabled) | Whether custom domain is configured |
+| <a name="output_dns_additional_records"></a> [dns\_additional\_records](#output\_dns\_additional\_records) | DNS records to point each additional\_domain\_names entry to CloudFront (add these to your DNS provider if route53\_managed = false) |
 | <a name="output_dns_cloudfront_record"></a> [dns\_cloudfront\_record](#output\_dns\_cloudfront\_record) | DNS record to point domain to CloudFront (add this to your DNS provider if route53\_managed = false) |
 | <a name="output_dns_validation_records"></a> [dns\_validation\_records](#output\_dns\_validation\_records) | DNS records for ACM certificate validation (add these to your DNS provider if route53\_managed = false) |
 | <a name="output_dynamodb_table_arn"></a> [dynamodb\_table\_arn](#output\_dynamodb\_table\_arn) | DynamoDB table ARN |
